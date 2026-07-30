@@ -1,0 +1,28 @@
+[Unit]
+Description=StockWhisk Gunicorn (Django WSGI)
+After=network.target postgresql.service redis-server.service
+Wants=redis-server.service
+
+[Service]
+Type=notify
+User=stockwhisk
+Group=www-data
+WorkingDirectory=/srv/stockwhisk
+EnvironmentFile=/srv/stockwhisk/.env
+RuntimeDirectory=stockwhisk
+RuntimeDirectoryMode=0755
+ExecStart=/srv/stockwhisk/.venv/bin/gunicorn -c deploy/gunicorn.conf.py config.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=30
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

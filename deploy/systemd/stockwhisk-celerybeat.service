@@ -1,0 +1,24 @@
+[Unit]
+Description=StockWhisk Celery beat (scheduler)
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=stockwhisk
+Group=www-data
+WorkingDirectory=/srv/stockwhisk
+EnvironmentFile=/srv/stockwhisk/.env
+# DatabaseScheduler stores the schedule in the DB (django_celery_beat) — no pidfile drift.
+ExecStart=/srv/stockwhisk/.venv/bin/celery -A config beat --loglevel=info \
+    --scheduler django_celery_beat.schedulers:DatabaseScheduler
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

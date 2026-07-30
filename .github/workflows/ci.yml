@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python-version }}, PostgreSQL)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stockwhisk_test
+          POSTGRES_USER: stockwhisk
+          POSTGRES_PASSWORD: stockwhisk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stockwhisk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "True"
+      DB_ENGINE: postgres
+      DB_NAME: stockwhisk_test
+      DB_USER: stockwhisk
+      DB_PASSWORD: stockwhisk
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      REDIS_URL: ""            # eager Celery — no broker needed in CI
+      ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Missing migrations guard
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run migrations
+        run: python manage.py migrate --noinput
+
+      - name: Run test suite
+        run: pytest -q
+
+  deploy-check:
+    name: Production settings check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: check --deploy (security hardening)
+        env:
+          # 50+ char key so security.W009 doesn't fire on the CI placeholder.
+          SECRET_KEY: ci-deploy-check-only-Jf83nZq1xLpV7wRtY2bK9mHcD4sG6uEaQ0oI5
+          DEBUG: "False"
+          ALLOWED_HOSTS: app.example.com
+          CSRF_TRUSTED_ORIGINS: https://app.example.com
+          SECURE_SSL_REDIRECT: "True"
+        # Scope to the security tag so DRF-spectacular doc notices don't fail CI;
+        # fail on any real security WARNING (insecure cookies, missing HSTS, etc.).
+        run: python manage.py check --deploy --tag security --fail-level WARNING

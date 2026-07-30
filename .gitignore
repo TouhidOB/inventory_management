@@ -1,0 +1,106 @@
+# ---------------------------------------------------------------------------
+# StockWhisk — .gitignore
+# ---------------------------------------------------------------------------
+
+# --- Secrets & environment ---------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual environments ----------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# --- Django ------------------------------------------------------------------
+*.log
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+/staticfiles/
+/static_root/
+/media/*
+!/media/.gitkeep
+
+# --- Celery ------------------------------------------------------------------
+celerybeat-schedule
+celerybeat.pid
+*.pid
+
+# --- Testing / coverage ------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.cache
+nosetests.xml
+.hypothesis/
+
+# --- Type checking / linting -------------------------------------------------
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+.pyre/
+
+# --- IDE / editors -----------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# --- OS ----------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- Node (if frontend tooling is added later) -------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# --- Jupyter -----------------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- Uploaded user content (kept out of VCS) ---------------------------------
+media/shop_logos/
+media/imports/
+media/product_images/
+
+# --- Generated marketing binaries (keep .html sources, ignore exports) -------
+marketing/*.pdf

@@ -1,0 +1,114 @@
+{% extends "web/base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block heading %}Product · {{ product.name }}{% endblock %}
+{% block content %}
+<div class="vstack gap-3">
+
+  <div class="d-flex justify-content-between align-items-start">
+    <a href="{% url 'web:products' %}" class="small text-secondary text-decoration-none">← Back to products</a>
+    {% if is_owner or 'manage_products' in perms_set %}
+    <a href="{% url 'web:product_edit' product.id %}" class="btn btn-outline-brand btn-sm">✏️ Edit</a>{% endif %}
+  </div>
+
+  <!-- Overview -->
+  <div class="card shadow-sm"><div class="card-body row g-3">
+    <div class="col-md-8">
+      <div class="fs-4 fw-bold">{{ product.name }}</div>
+      <div class="small text-secondary">SKU: <span class="text-body fw-semibold">{{ product.sku|default:"—" }}</span>
+        · Barcode: <span class="text-body fw-semibold">{{ product.barcode|default:"—" }}</span></div>
+      <div class="small text-secondary mt-1">
+        Category: {{ product.category.name|default:"—" }} · Brand: {{ product.brand.name|default:"—" }} · Supplier: {{ product.supplier.name|default:"—" }}
+      </div>
+      {% if product.warranty_months %}<span class="badge text-bg-info mt-2">🛡 {{ product.warranty_months }} mo warranty</span>{% endif %}
+    </div>
+    <div class="col-md-4 text-md-end">
+      <div class="small text-secondary">Selling price</div>
+      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ product.selling_price }}</div>
+      <div class="small text-secondary">Cost {{ product.cost_price }} · Stock {{ product.current_stock }}</div>
+    </div>
+  </div></div>
+
+  <!-- Unit stats -->
+  <div class="row g-3">
+    <div class="col-sm-4"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Unsold units (in stock)</div><div class="fs-4 fw-bold text-success">{{ in_stock_units }}</div></div></div></div>
+    <div class="col-sm-4"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Sold units (tracked)</div><div class="fs-4 fw-bold">{{ sold_units }}</div></div></div></div>
+    <div class="col-sm-4"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Total qty sold</div><div class="fs-4 fw-bold">{{ sold_qty }}</div></div></div></div>
+  </div>
+
+  <!-- Batch breakdown: each batch keeps its own cost, selling price & margin -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <span class="fw-semibold text-brand">📦 Batch breakdown (in stock)</span>
+      {% if batch_avg %}<span class="small text-secondary">Weighted average across {{ batch_avg.qty }} unit(s)</span>{% endif %}
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="thead-3"><tr>
+          <th>Batch</th><th class="text-end">In stock</th>
+          <th class="text-end">Purchase price</th><th class="text-end">Selling price</th>
+          <th class="text-end">Profit / unit</th><th class="text-end">Margin</th>
+          <th class="text-end">Stock value</th><th class="text-end">Profit potential</th></tr></thead>
+        <tbody>
+          {% for b in batches %}
+          <tr>
+            <td class="text-secondary">#{{ forloop.counter }}</td>
+            <td class="text-end fw-semibold">{{ b.qty }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ b.cost|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ b.sell|floatformat:2 }}</td>
+            <td class="text-end {% if b.profit_unit < 0 %}text-danger{% else %}text-success{% endif %}">{{ current_shop.currency }} {{ b.profit_unit|floatformat:2 }}</td>
+            <td class="text-end {% if b.margin < 0 %}text-danger{% else %}fw-semibold text-brand{% endif %}">{{ b.margin|floatformat:1 }}%</td>
+            <td class="text-end text-secondary">{{ current_shop.currency }} {{ b.stock_value|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ b.profit_potential|floatformat:2 }}</td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="8" class="text-center text-secondary py-4">No stock on hand.</td></tr>{% endfor %}
+        </tbody>
+        {% if batch_avg %}
+        <tfoot class="table-group-divider">
+          <tr class="fw-semibold">
+            <td>Average / total</td>
+            <td class="text-end">{{ batch_avg.qty }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ batch_avg.avg_cost|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ batch_avg.avg_sell|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ batch_avg.profit_unit|floatformat:2 }}</td>
+            <td class="text-end text-brand">{{ batch_avg.margin|floatformat:1 }}%</td>
+            <td class="text-end">{{ current_shop.currency }} {{ batch_avg.stock_value|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ batch_avg.profit_potential|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+    <div class="card-footer bg-white small text-secondary">Each barcode batch keeps its own purchase &amp; selling price. The footer row shows the qty-weighted average used for overall valuation.</div>
+  </div>
+
+  <!-- Per-unit barcode list -->
+  <div class="card shadow-sm" x-data="{ only:'all' }">
+    <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <span class="fw-semibold text-brand">Tracked units (scanned barcodes)</span>
+      <div class="btn-group btn-group-sm">
+        <button @click="only='all'" :class="only==='all'?'btn-brand':'btn-light'" class="btn">All</button>
+        <button @click="only='in_stock'" :class="only==='in_stock'?'btn-brand':'btn-light'" class="btn">Unsold</button>
+        <button @click="only='sold'" :class="only==='sold'?'btn-brand':'btn-light'" class="btn">Sold</button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-6"><tr>
+          <th>Unit barcode</th><th>Status</th><th>Invoice</th><th>Sold at</th><th>Added</th></tr></thead>
+        <tbody>
+          {% for u in units %}
+          <tr x-show="only==='all' || only==='{{ u.status }}'">
+            <td class="font-monospace">{{ u.barcode }}</td>
+            <td>{% if u.status == 'sold' %}<span class="badge text-bg-secondary">Sold</span>{% else %}<span class="badge text-bg-success">In stock</span>{% endif %}</td>
+            <td>{% if u.sale_id %}<a href="{% url 'web:sale_detail' u.sale_id %}">{{ u.sale.invoice_no }}</a>{% else %}—{% endif %}</td>
+            <td class="small text-secondary">{{ u.sold_at|date:"M d, Y H:i"|default:"—" }}</td>
+            <td class="small text-secondary">{{ u.created_at|date:"M d, Y" }}</td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="5" class="text-center text-secondary py-4">No per-unit barcodes tracked yet. Add them via bulk scan on the Purchase page.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

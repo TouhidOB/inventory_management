@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Purchase {{ po.po_number }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body{background:#e9ecef;margin:0;}
+    .sheet{background:#fff;max-width:210mm;min-height:297mm;margin:1rem auto;padding:14mm;
+           box-shadow:0 0 8px rgba(0,0,0,.2);display:flex;flex-direction:column;}
+    .inv-body{flex:1 0 auto;}
+    .inv-footer{margin-top:auto;padding-top:5mm;}
+    @media print{
+      @page{margin:12mm;}
+      body{background:#fff;}
+      .sheet{max-width:none;min-height:calc(297mm - 24mm);margin:0;padding:0;box-shadow:none;}
+      .no-print{display:none;}
+    }
+  </style>
+</head>
+<body onload="window.focus()">
+
+<div class="no-print" style="position:fixed;top:1rem;right:1rem;z-index:1050">
+  <button onclick="window.print()" class="btn btn-sm text-white shadow" style="background:#234C6A">🖨️ Print</button>
+</div>
+
+<div class="sheet">
+  <header class="inv-header pb-3 mb-3" style="border-bottom:2px solid #1B3C53">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+      <div class="d-flex align-items-center gap-3">
+        {% if shop.logo %}<img src="{{ shop.logo.url }}" alt="{{ shop.name }} logo" style="height:4rem;width:4rem;object-fit:contain">{% endif %}
+        <div>
+          <div class="fs-4 fw-bold" style="color:#1B3C53">{{ shop.name }}</div>
+          {% if shop.address %}<div class="small text-secondary">{{ shop.address }}</div>{% endif %}
+          {% if shop.phone %}<div class="small text-secondary">📞 {{ shop.phone }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="text-end">
+        <div class="fs-6 fw-bold" style="color:#1B3C53">PURCHASE INVOICE</div>
+        <div class="small">{{ po.po_number }}</div>
+        <div class="small text-secondary">{{ po.order_date|date:"M d, Y" }}</div>
+        <div class="small"><span class="badge {% if po.status == 'received' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ po.get_status_display }}</span></div>
+        <svg id="barcode" class="mt-1"></svg>
+      </div>
+    </div>
+  </header>
+
+  <main class="inv-body">
+    <div class="mb-3">
+      <div class="text-secondary small">Supplier</div>
+      <div class="fw-medium">{{ po.supplier.name }}</div>
+      {% if po.supplier.phone %}<div class="small text-secondary">📞 {{ po.supplier.phone }}</div>{% endif %}
+    </div>
+
+    <table class="table table-sm">
+      <thead style="background:#D2C1B6"><tr>
+        <th>Item</th><th class="text-center">Warranty</th><th class="text-end">Qty</th><th class="text-end">Unit cost</th><th class="text-end">Amount</th></tr></thead>
+      <tbody>
+        {% for it in po.items.all %}
+        <tr>
+          <td>{{ it.product.name }}</td>
+          <td class="text-center small">{% if it.product.warranty_months %}🛡 {{ it.product.warranty_months }} mo{% else %}—{% endif %}</td>
+          <td class="text-end">{{ it.quantity }}</td>
+          <td class="text-end">{{ it.unit_cost }}</td>
+          <td class="text-end">{{ it.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="d-flex justify-content-end">
+      <table class="table table-sm" style="width:18rem">
+        <tr><td class="text-secondary">Subtotal</td><td class="text-end fw-semibold">{{ shop.currency }} {{ po.subtotal }}</td></tr>
+        {% if po.discount %}<tr><td class="text-secondary">Discount</td><td class="text-end">-{{ po.discount }}</td></tr>{% endif %}
+        <tr class="fw-bold border-top"><td>Grand total</td><td class="text-end">{{ shop.currency }} {{ po.total }}</td></tr>
+        <tr><td class="text-secondary">Paid</td><td class="text-end">{{ po.paid }}</td></tr>
+        <tr><td class="text-secondary">Due</td><td class="text-end {% if po.due > 0 %}text-danger fw-semibold{% endif %}">{{ po.due }}</td></tr>
+      </table>
+    </div>
+  </main>
+
+  <div class="inv-footer">
+    {% include "web/_invoice_footer.html" with shop=shop %}
+  </div>
+</div>
+
+<script>
+  try { JsBarcode("#barcode", "{{ po.po_number|escapejs }}", {format:"CODE128", height:38, width:1.4, margin:0, displayValue:true, fontSize:12}); } catch(e){}
+</script>
+</body>
+</html>

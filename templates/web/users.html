@@ -1,0 +1,129 @@
+{% extends "web/base.html" %}
+{% block title %}Users & Roles{% endblock %}
+{% block heading %}Users & Roles{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <!-- Team members -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-3">Team members</div>
+      <div class="table-responsive mb-4">
+      <table class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-2"><tr><th>Email</th><th>Role</th><th>Active</th><th class="text-end" style="width:20rem">Actions</th></tr></thead>
+        <tbody>{% for u in users %}<tr>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.role == 'owner' %}<span class="text-capitalize">Owner</span>
+            {% else %}
+            <form method="post" class="d-flex align-items-center gap-1">{% csrf_token %}
+              <input type="hidden" name="action" value="set_role">
+              <input type="hidden" name="user_id" value="{{ u.id }}">
+              <select name="role" onchange="this.form.submit()" class="form-select form-select-sm w-auto">
+                {% for r in assignable_roles %}<option value="{{ r.role_type }}" {% if r.role_type == u.role %}selected{% endif %}>{{ r.name }}</option>{% endfor %}
+              </select>
+            </form>
+            {% endif %}
+          </td>
+          <td>{{ u.is_active|yesno:"Yes,No" }}</td>
+          <td class="text-end">
+            {% if u.role != 'owner' %}
+            <div x-data="{rp:false}" class="d-flex gap-2 justify-content-end align-items-center flex-nowrap">
+              <form method="post" x-show="rp" x-cloak class="input-group input-group-sm" style="width:14rem">{% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="user_id" value="{{ u.id }}">
+                <input name="new_password" type="text" required minlength="6" placeholder="New password ≥6" class="form-control form-control-sm">
+                <button class="btn btn-brand btn-sm">Set</button>
+              </form>
+              <button type="button" @click="rp=!rp" class="btn btn-link btn-sm p-0 text-nowrap" x-text="rp?'Cancel':'Reset password'"></button>
+              <form method="post" onsubmit="return confirm('Delete user {{ u.email|escapejs }}? This cannot be undone.')">{% csrf_token %}
+                <input type="hidden" name="action" value="delete_user">
+                <input type="hidden" name="user_id" value="{{ u.id }}">
+                <button class="btn btn-link btn-sm text-danger p-0">Delete</button>
+              </form>
+            </div>
+            {% else %}<span class="text-secondary small">—</span>{% endif %}
+          </td>
+        </tr>{% endfor %}</tbody>
+      </table>
+      </div>
+      <div class="fw-semibold small mb-2">Add user</div>
+      <form method="post" class="row g-2" x-data="{roleNew:false}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_user">
+        <div class="col-6"><input name="email" type="email" required placeholder="Email" class="form-control form-control-sm"></div>
+        <div class="col-6"><input name="password" type="password" required placeholder="Password" class="form-control form-control-sm"></div>
+        <div class="col-12"><input name="first_name" placeholder="Name" class="form-control form-control-sm"></div>
+        <div class="col-12"><label class="small text-secondary w-100">Role
+          <select name="role" x-on:change="roleNew=($event.target.value==='__new__')" class="form-select form-select-sm mt-1">
+            {% for r in assignable_roles %}<option value="{{ r.role_type }}">{{ r.name }}</option>{% endfor %}
+            <option value="__new__">➕ Add custom role…</option>
+          </select>
+        </label></div>
+        <div class="col-12"><input x-show="roleNew" x-cloak name="role_new" placeholder="New role name (e.g. Senior Technician)" class="form-control form-control-sm" :required="roleNew"></div>
+        <div class="col-12"><div x-show="roleNew" x-cloak class="small text-secondary">New role starts with no permissions — set them in “Roles &amp; permissions” after.</div></div>
+        <div class="col-12"><button class="btn btn-brand btn-sm">Create user</button></div>
+      </form>
+    </div></div>
+  </div>
+
+  <!-- Roles & permissions -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm" x-data="{newRole:false}"><div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="fw-semibold">Roles &amp; permissions</div>
+        <button @click="newRole=!newRole" class="btn btn-sm text-white" style="background:var(--brand-500)">+ Custom role</button>
+      </div>
+
+      <form x-show="newRole" x-cloak method="post" class="border rounded p-3 mb-3 bg-light">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_role">
+        <input name="role_name" required placeholder="Role name (e.g. Senior Technician)" class="form-control form-control-sm mb-2">
+        <div class="small text-secondary mb-1">Permissions</div>
+        <div class="row row-cols-2 g-1 small overflow-auto" style="max-height:10rem">
+          {% for p in all_perms %}
+          <div class="col"><label class="form-check-label"><input type="checkbox" name="codes" value="{{ p.code }}" class="form-check-input me-1"> {{ p.name }}</label></div>
+          {% endfor %}
+        </div>
+        <button class="btn btn-brand btn-sm mt-2">Create role</button>
+      </form>
+
+      <div class="accordion" id="rolesAcc">
+        {% for role in roles %}
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#role{{ role.id }}">
+              {{ role.name }}{% if role.is_system %} <span class="badge text-bg-light ms-2">system</span>{% endif %}{% if role.role_type == 'owner' %} <span class="text-secondary small ms-2">— all access</span>{% endif %}
+            </button>
+          </h2>
+          <div id="role{{ role.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#rolesAcc">
+            <div class="accordion-body">
+              {% if role.role_type != 'owner' %}
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_perms">
+                <input type="hidden" name="role_id" value="{{ role.id }}">
+                <div class="row row-cols-2 g-1 small">
+                  {% for p in all_perms %}
+                  <div class="col"><label class="form-check-label"><input type="checkbox" name="codes" value="{{ p.code }}" class="form-check-input me-1" {% if p in role.permissions.all %}checked{% endif %}> {{ p.name }}</label></div>
+                  {% endfor %}
+                </div>
+                <button class="btn btn-brand btn-sm mt-2">Save permissions</button>
+              </form>
+              {% if not role.is_system %}
+              <form method="post" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_role">
+                <input type="hidden" name="role_id" value="{{ role.id }}">
+                <button type="button" data-confirm="Delete role “{{ role.name|escapejs }}”?" class="btn btn-link btn-sm text-danger p-0">Delete role</button>
+              </form>
+              {% endif %}
+              {% else %}<div class="small text-secondary">Owners always have every permission.</div>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

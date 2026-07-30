@@ -1,0 +1,14 @@
+{% comment %}Bootstrap pager. Needs `page_obj` (a Django Page). Preserves other GET params.{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="border-top p-2">
+  <ul class="pagination pagination-sm justify-content-center mb-0">
+    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_previous %}?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}">«</a>
+    </li>
+    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} rows</span></li>
+    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_next %}?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}{% else %}#{% endif %}">»</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}

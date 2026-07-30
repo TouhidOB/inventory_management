@@ -1,0 +1,54 @@
+{% extends "web/base.html" %}
+{% block title %}Barcodes{% endblock %}
+{% block heading %}Barcode Table{% endblock %}
+{% block content %}
+<div class="vstack gap-3">
+  <div class="text-secondary small">Every scanned barcode with its own purchase price, selling price and warranty. A POS scan reads its price &amp; warranty from this exact row.</div>
+
+  <form method="get" class="d-flex flex-wrap gap-2">
+    <input name="q" value="{{ q }}" placeholder="Search barcode or product…" class="form-control form-control-sm" style="max-width:20rem">
+    <select name="status" class="form-select form-select-sm" style="max-width:11rem" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      <option value="in_stock" {% if status == 'in_stock' %}selected{% endif %}>In stock</option>
+      <option value="sold" {% if status == 'sold' %}selected{% endif %}>Sold</option>
+      <option value="returned" {% if status == 'returned' %}selected{% endif %}>Returned</option>
+    </select>
+    <button class="btn btn-brand btn-sm">Search</button>
+    {% if q or status %}<a href="{% url 'web:barcodes' %}" class="btn btn-light btn-sm">Clear</a>{% endif %}
+  </form>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-1"><tr>
+          <th>Barcode</th><th>Product</th>
+          <th class="text-end">Purchase price</th><th class="text-end">Selling price</th>
+          <th class="text-end">Profit</th><th class="text-end">Warranty</th>
+          <th class="text-center">Status</th><th>Added</th></tr></thead>
+        <tbody>
+          {% for u in units %}
+          <tr>
+            <td class="font-monospace">{{ u.barcode }}</td>
+            <td><a href="{% url 'web:product_profile' u.product_id %}" class="text-decoration-none">{{ u.product.name }}</a></td>
+            <td class="text-end">{{ current_shop.currency }} {{ u.effective_cost_price|floatformat:2 }}</td>
+            <td class="text-end">{{ current_shop.currency }} {{ u.effective_selling_price|floatformat:2 }}</td>
+            <td class="text-end {% if u.effective_profit < 0 %}text-danger{% else %}text-success{% endif %}">{{ current_shop.currency }} {{ u.effective_profit|floatformat:2 }}</td>
+            <td class="text-end">{{ u.effective_warranty_months }} mo</td>
+            <td class="text-center">
+              {% if u.status == 'sold' %}<span class="badge text-bg-secondary">Sold</span>
+              {% elif u.status == 'returned' %}<span class="badge text-bg-warning">Returned</span>
+              {% else %}<span class="badge text-bg-success">In stock</span>{% endif %}</td>
+            <td class="small text-secondary">{{ u.created_at|date:"M d, Y" }}</td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="8" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">▦</div>
+            <div class="fw-semibold mt-2">No barcodes yet</div>
+            <div class="small">Add per-unit barcodes via bulk scan on the Purchase page.</div>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

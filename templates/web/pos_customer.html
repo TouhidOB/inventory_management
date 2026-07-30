@@ -1,0 +1,61 @@
+{% extends "web/base.html" %}
+{% block title %}POS · Customer{% endblock %}
+{% block heading %}Point of Sale · Step 2: Customer & payment{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <!-- Cart summary -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-2">Order summary</div>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm align-middle mb-0">
+          <thead class="thead-1"><tr><th>Product</th><th class="text-end">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+          <tbody>
+            {% for it in cart %}
+            <tr><td>{{ it.name }}</td><td class="text-end">{{ it.quantity }}</td><td class="text-end">{{ it.unit_price }}</td><td class="text-end">{{ it.line }}</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot><tr class="fw-bold"><td colspan="3" class="text-end">Total</td><td class="text-end">{{ current_shop.currency }} {{ total }}</td></tr></tfoot>
+        </table>
+      </div>
+      <a href="{% url 'web:pos' %}" class="btn btn-light btn-sm mt-2">← Back to cart</a>
+    </div></div>
+  </div>
+
+  <!-- Customer + payment -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm" x-data="{ hasCust:false }"><div class="card-body">
+      <form method="post" class="vstack gap-3">
+        {% csrf_token %}
+        <div>
+          <label class="small">Customer</label>
+          <select name="customer" x-model="hasCust" class="form-select form-select-sm">
+            <option value="">Walk-in customer</option>
+            {% for c in customers %}<option value="{{ c.id }}">{{ c.name }} · {{ c.phone }}</option>{% endfor %}
+          </select>
+        </div>
+        <div x-show="!hasCust" class="vstack gap-2">
+          <input name="customer_name" placeholder="Customer name *" class="form-control form-control-sm">
+          <input name="customer_phone" placeholder="Phone *" class="form-control form-control-sm">
+          <input name="customer_address" placeholder="Address" class="form-control form-control-sm">
+        </div>
+        <div class="row g-2">
+          <div class="col-6"><label class="small">Discount</label><input name="discount" type="number" step="0.01" value="0" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small">Amount paid *</label><input name="paid" type="number" step="0.01" required class="form-control form-control-sm"></div>
+        </div>
+        <div>
+          <label class="small">Payment method</label>
+          <select name="method" class="form-select form-select-sm">
+            <option value="cash">💵 Cash</option>
+            <option value="bkash">📱 bKash</option>
+            <option value="nagad">📱 Nagad</option>
+            <option value="card">💳 Card</option>
+            <option value="bank">🏦 Bank transfer</option>
+          </select>
+        </div>
+        <button class="btn btn-success w-100">Complete sale &amp; print invoice</button>
+      </form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

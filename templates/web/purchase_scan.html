@@ -1,0 +1,366 @@
+{% extends "web/base.html" %}
+{% block title %}Purchase product{% endblock %}
+{% block heading %}Purchase Product{% endblock %}
+{% block content %}
+<div x-data="purchasePage()" class="row g-3">
+
+  <!-- ============ LEFT: workflow ============ -->
+  <div class="col-lg-8 vstack gap-3">
+
+    <!-- Header + actions -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <div class="fs-5 fw-semibold">Purchase New Product</div>
+        <div class="text-secondary small">Ingest new inventory and update stock levels.</div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'web:products' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="button" class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#newProductModal">+ New Product Record</button>
+      </div>
+    </div>
+
+    <!-- Advanced product search -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-light fw-semibold text-brand">🔎 Advanced Product Search</div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Product Name</label>
+            <input x-model="qName" placeholder="e.g. DVR High Resolution" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Barcode / SKU</label>
+            <div class="input-group">
+              <input x-model="qBarcode" @keydown.enter.prevent="scanSelect()" placeholder="Scan or type barcode…" class="form-control">
+              <span class="input-group-text">▊▍▊</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="border rounded">
+          <div class="px-3 py-2 bg-light small fw-semibold text-secondary border-bottom">
+            SEARCH RESULTS (<span x-text="filtered().length"></span>)
+          </div>
+          <div class="overflow-auto" style="max-height:16rem">
+            <template x-for="p in displayed()" :key="p.id">
+              <button type="button" @click="select(p)"
+                      class="d-flex align-items-center gap-3 w-100 text-start border-0 border-bottom px-3 py-2"
+                      :class="sel===p.id ? 'bg-light' : 'bg-transparent'">
+                <span class="d-inline-flex align-items-center justify-content-center border rounded bg-white"
+                      style="width:2.4rem;height:2.4rem" :class="sel===p.id?'text-brand':'text-secondary'">▢</span>
+                <span class="flex-grow-1">
+                  <span class="fw-medium d-block" x-text="p.name"></span>
+                  <span class="small text-secondary" x-text="'SKU: '+(p.sku||'—')+' • Stock: '+p.stock"></span>
+                </span>
+                <span x-show="sel===p.id" class="badge text-bg-primary">SELECTED</span>
+              </button>
+            </template>
+            <div x-show="!filtered().length" class="px-3 py-4 text-center text-secondary small">No matching products.</div>
+          </div>
+          <!-- Only a few shown until the user searches (keeps big catalogs fast). -->
+          <div x-show="!hasQuery() && filtered().length > previewCount"
+               class="px-3 py-2 text-center small text-secondary border-top bg-light">
+            <span x-text="'+ '+(filtered().length - previewCount)+' more — type a name or barcode to search'"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing information -->
+    <div class="card shadow-sm" :class="sel?'':'opacity-50'">
+      <div class="card-header bg-light fw-semibold text-brand">💵 Pricing Information</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Cost Price ({{ current_shop.currency }})</label>
+            <input x-model.number="cost" type="number" step="0.01" min="0" :disabled="!sel" class="form-control">
+            <div class="form-text" x-show="sel" x-text="'Average cost is currently '+fmt(avgCost)"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Selling Price ({{ current_shop.currency }})</label>
+            <input x-model.number="selling" type="number" step="0.01" min="0" :disabled="!sel" class="form-control">
+            <div class="d-flex justify-content-between form-text" x-show="sel">
+              <span class="fw-semibold text-brand" x-text="'Margin: '+margin()+'%'"></span>
+              <span x-text="'Profit: '+fmt(profit())+'/unit'"></span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-secondary">Warranty duration (months)</label>
+            <input x-model.number="warranty" type="number" step="1" min="0" :disabled="!sel" class="form-control" placeholder="0">
+            <div class="form-text">Applied to every unit received in this batch.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk barcode scan -->
+    <div class="card shadow-sm" :class="sel?'':'opacity-50'">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-semibold text-brand">▦ Bulk Barcode Scan</span>
+        <span class="badge text-bg-dark" x-text="barcodeCount()+' BARCODES ADDED'"></span>
+      </div>
+      <div class="card-body">
+        <p class="text-secondary">Paste multiple barcodes or use a scanner for rapid entry. One code per line.</p>
+        <div class="row g-3">
+          <div class="col-md-8">
+            <textarea x-model="bulk" :disabled="!sel" rows="8" class="form-control font-monospace"
+                      placeholder="8806090123456&#10;8806090123457&#10;…"></textarea>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded h-100 d-flex flex-column align-items-center justify-content-center text-center p-3 bg-light">
+              <div class="fs-3">📠</div>
+              <div class="fw-semibold">Continuous Scan Mode</div>
+              <div class="small text-secondary mb-2">Focus the cursor in the field to start scanning</div>
+              <button type="button" @click="bulk=''" :disabled="!sel" class="btn btn-outline-brand btn-sm w-100">Clear List</button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-end">
+          <button type="button" @click="addToReceive()" :disabled="!sel || !barcodeCount()" class="btn btn-brand">
+            + Add <span x-text="barcodeCount()"></span> unit(s) to receive
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RIGHT: To Receive ============ -->
+  <div class="col-lg-4">
+   <div class="position-sticky vstack gap-3" style="top:1rem">
+    <div class="card shadow-sm">
+      <div class="card-body text-white rounded-top" style="background:#0f172a">
+        <div class="fw-semibold">🗒 To Receive</div>
+        <div class="small text-white-50">Pending Stock Injection</div>
+      </div>
+
+      <div class="card-body border-bottom overflow-auto" style="max-height:22rem">
+        <template x-for="(it,idx) in queue" :key="idx">
+          <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
+            <div>
+              <div class="fw-medium" x-text="it.name"></div>
+              <div class="small text-secondary" x-text="'Qty: '+it.qty+' units'"></div>
+            </div>
+            <div class="text-end">
+              <button @click="queue.splice(idx,1)" class="btn btn-sm btn-link text-danger p-0 float-end" aria-label="Remove item">🗑</button>
+              <div class="fw-semibold text-brand mt-4" x-text="fmt(it.qty*it.cost)"></div>
+            </div>
+          </div>
+        </template>
+        <div x-show="!queue.length" class="text-center text-secondary py-4">
+          <div class="fs-2">🗃</div>
+          <div class="small">Add products to see them queued for stock injection.</div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="d-flex justify-content-between small"><span class="text-secondary">Subtotal</span><span x-text="fmt(subtotal())"></span></div>
+        <div class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 border-top"><span>Total Value</span><span x-text="fmt(subtotal())"></span></div>
+
+        <div class="mt-3">
+          <label class="small text-secondary d-flex justify-content-between">
+            <span>Paid to supplier now</span>
+            <a role="button" class="text-decoration-none" @click="paid=subtotal()">Pay full</a>
+          </label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">{{ current_shop.currency }}</span>
+            <input x-model.number="paid" type="number" step="0.01" min="0" class="form-control" placeholder="0.00">
+            <select x-model="method" class="form-select" style="max-width:7rem">
+              <option value="cash">Cash</option><option value="bkash">bKash</option>
+              <option value="nagad">Nagad</option><option value="bank">Bank</option>
+            </select>
+          </div>
+          <div class="d-flex justify-content-between small mt-2">
+            <span class="text-secondary">Supplier due after payment</span>
+            <span class="fw-semibold" :class="dueAfter()>0 ? 'text-danger':'text-success'" x-text="fmt(dueAfter())"></span>
+          </div>
+          <div class="form-text" x-show="!vendor && paid">Select a vendor to record supplier due &amp; payment.</div>
+        </div>
+
+        <button @click="push()" :disabled="!queue.length" class="btn btn-brand w-100 mt-3">⬆ Push to Stock</button>
+        <div class="text-center small text-secondary mt-1">ⓘ Updates ledger &amp; inventory levels</div>
+        <div x-show="msg" x-text="msg" class="text-center small mt-2 text-success"></div>
+      </div>
+    </div>
+
+    <!-- Purchase summary -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="small text-secondary fw-semibold mb-2">PURCHASE SUMMARY</div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="small text-secondary d-flex justify-content-between">Vendor
+              <a role="button" class="text-decoration-none" @click="toSupplier('vendor')">+ add</a></label>
+            <select x-model="vendor" class="form-select form-select-sm">
+              <option value="">— none —</option>
+              <template x-for="s in suppliers" :key="s.id"><option :value="s.id" x-text="s.name"></option></template>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="small text-secondary">Warehouse</label>
+            <input value="{{ current_shop.name }}" disabled class="form-control form-control-sm">
+          </div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- New Product Record modal -->
+<div class="modal fade" id="newProductModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">New Product Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <form @submit.prevent="createProduct($event)">
+        <div class="modal-body row g-2">
+          <div class="col-12"><label class="small text-secondary">Name</label><input name="name" required class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Warranty (months)</label><input name="warranty_months" type="number" min="0" value="0" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Cost price</label><input name="cost_price" type="number" step="0.01" min="0" value="0" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Selling price</label><input name="selling_price" type="number" step="0.01" min="0" value="0" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary d-flex justify-content-between">Supplier
+            <a role="button" class="text-decoration-none" @click="toSupplier('product')">+ add</a></label>
+            <select name="supplier" x-model="npSupplier" class="form-select form-select-sm"><option value="">— none —</option>
+              <template x-for="s in suppliers" :key="s.id"><option :value="s.id" x-text="s.name"></option></template></select></div>
+          <div class="col-12 small text-secondary">SKU auto-generated if left blank. Barcode is assigned per unit via bulk scan.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-brand btn-sm">Create &amp; select</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- New Supplier modal (#2) -->
+<div class="modal fade" id="newSupplierModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">New Supplier</h5>
+        <button type="button" class="btn-close" @click="closeSupplier()" aria-label="Close"></button></div>
+      <form @submit.prevent="createSupplier($event)" novalidate>
+        <div class="modal-body row g-2">
+          <div class="col-6"><label class="small text-secondary">Contact name</label><input name="supplier_name" required class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Company name</label><input name="supplier_company" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Phone</label><input name="supplier_phone" class="form-control form-control-sm"></div>
+          <div class="col-6"><label class="small text-secondary">Email</label>
+            <input name="supplier_email" type="email" x-model="newSupEmail"
+                   :class="newSupEmail && !validEmail(newSupEmail) ? 'is-invalid' : ''"
+                   class="form-control form-control-sm">
+            <div class="invalid-feedback">Enter a valid email address.</div></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-sm" @click="closeSupplier()">Cancel</button>
+          <button class="btn btn-brand btn-sm">Save supplier</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090">
+  <div id="scanToast" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex"><div id="scanToastBody" class="toast-body"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>
+  </div>
+</div>
+</div><!-- /x-data purchasePage -->
+
+<script>
+function purchasePage(){
+  return {
+    qName:'', qBarcode:'', sel:null, cost:0, selling:0, warranty:0, avgCost:0,
+    bulk:'', queue:[], vendor:'', paid:0, method:'cash', msg:'', previewCount:3, npSupplier:'', newSupEmail:'', supFrom:'',
+    products:[{% for p in products %}{id:{{ p.id }},name:"{{ p.name|escapejs }}",sku:"{{ p.sku|escapejs }}",barcode:"{{ p.barcode|escapejs }}",stock:{{ p.current_stock|default:0 }},cost:{{ p.cost_price|default:0 }},selling:{{ p.selling_price|default:0 }},warranty:{{ p.warranty_months|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+    suppliers:[{% for s in suppliers %}{id:{{ s.id }},name:"{{ s.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
+    curr:"{{ current_shop.currency|escapejs }}",
+    validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); },
+    fmt(n){ return this.curr+' '+(Number(n)||0).toFixed(2); },
+    hasQuery(){ return !!(this.qName.trim() || this.qBarcode.trim()); },
+    filtered(){
+      const n=this.qName.toLowerCase().trim(), b=this.qBarcode.toLowerCase().trim();
+      return this.products.filter(p=>
+        (!n || p.name.toLowerCase().includes(n)) &&
+        (!b || (p.barcode&&p.barcode.toLowerCase().includes(b)) || (p.sku&&p.sku.toLowerCase().includes(b))));
+    },
+    // Show a short preview until the user searches; then reveal all matches.
+    displayed(){ const f=this.filtered(); return this.hasQuery() ? f : f.slice(0,this.previewCount); },
+    select(p){ this.sel=p.id; this.cost=Number(p.cost); this.selling=Number(p.selling); this.warranty=Number(p.warranty||0); this.avgCost=Number(p.cost); },
+    dueAfter(){ return Math.max(0, this.subtotal()-(Number(this.paid)||0)); },
+    selProduct(){ return this.products.find(p=>p.id===this.sel)||null; },
+    scanSelect(){
+      const code=this.qBarcode.trim(); if(!code)return;
+      const p=this.products.find(x=>x.barcode&&x.barcode.trim()===code) || (this.filtered().length===1?this.filtered()[0]:null);
+      if(p){ this.select(p); this.qBarcode=''; this.toast('Selected '+p.name,true); }
+      else { this.toast('No product for “'+code+'”',false); }
+    },
+    margin(){ const s=Number(this.selling)||0, c=Number(this.cost)||0; return s>0 ? (((s-c)/s)*100).toFixed(1) : '0.0'; },
+    profit(){ return (Number(this.selling)||0)-(Number(this.cost)||0); },
+    barcodeCount(){ return this.bulk.split('\n').map(x=>x.trim()).filter(Boolean).length; },
+    barcodeList(){ return this.bulk.split('\n').map(x=>x.trim()).filter(Boolean); },
+    addToReceive(){
+      const p=this.selProduct(); if(!p)return;
+      const codes=this.barcodeList(); const qty=codes.length;
+      if(!qty){ this.toast('Scan or paste barcodes first.',false); return; }
+      const e=this.queue.find(i=>i.id===p.id);
+      if(e){ e.qty+=qty; e.cost=Number(this.cost); e.selling=Number(this.selling); e.warranty=Number(this.warranty)||0; e.barcodes=e.barcodes.concat(codes); }
+      else { this.queue.push({id:p.id,name:p.name,qty:qty,cost:Number(this.cost),selling:Number(this.selling),warranty:Number(this.warranty)||0,barcodes:codes}); }
+      this.toast('Queued '+qty+' × '+p.name,true); this.bulk='';
+    },
+    subtotal(){ return this.queue.reduce((s,i)=>s+i.qty*i.cost,0); },
+    async push(){
+      if(!this.queue.length)return; this.msg='';
+      const res=await fetch("{% url 'web:purchase_scan' %}",{method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':pcsrf()},
+        body:JSON.stringify({supplier:this.vendor||null, paid:Number(this.paid)||0, method:this.method,
+          items:this.queue.map(i=>({product:i.id,quantity:i.qty,cost:i.cost,selling:i.selling,warranty:i.warranty,barcodes:i.barcodes||[]}))})});
+      const d=await res.json();
+      if(res.ok){
+        this.queue.forEach(ci=>{const p=this.products.find(x=>x.id===ci.id); if(p){p.stock+=ci.qty;p.cost=ci.cost;p.selling=ci.selling;p.warranty=ci.warranty;}});
+        this.msg='Received '+d.units+' unit(s) across '+d.count+' product(s).';
+        if(d.due && Number(d.due)>0){ this.msg+=' Supplier due: '+this.fmt(d.due)+'.'; }
+        this.paid=0;
+        const rej=(d.rejected||[]);
+        if(rej.length){ this.msg+=' — '+rej.length+' duplicate barcode(s) skipped: '+rej.slice(0,5).join(', ')+(rej.length>5?'…':''); this.toast(rej.length+' duplicate barcode(s) skipped',false); }
+        else { this.toast('Stock updated',true); }
+        this.queue=[];
+      } else { this.toast(d.error||'Error',false); }
+    },
+    async createProduct(ev){
+      const fd=new FormData(ev.target); fd.append('action','add_product');
+      const res=await fetch("{% url 'web:products' %}",{method:'POST',
+        headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':pcsrf()},body:fd});
+      const d=await res.json();
+      if(res.ok){
+        const p={id:d.id,name:d.name,sku:d.sku,barcode:d.barcode,stock:Number(d.stock),cost:Number(d.cost),selling:Number(d.selling)};
+        this.products.unshift(p); this.select(p);
+        bootstrap.Modal.getInstance(document.getElementById('newProductModal')).hide();
+        ev.target.reset(); this.npSupplier=''; this.toast('Product created: '+p.name,true);
+      } else { this.toast(d.error||'Error creating product',false); }
+    },
+    // Modal instances (one open at a time — avoids stacked-backdrop bugs).
+    pm(){ return bootstrap.Modal.getOrCreateInstance(document.getElementById('newProductModal')); },
+    sm(){ return bootstrap.Modal.getOrCreateInstance(document.getElementById('newSupplierModal')); },
+    // Open supplier modal, remembering where we came from so we can return.
+    toSupplier(from){ this.supFrom=from; if(from==='product'){ this.pm().hide(); } this.sm().show(); },
+    closeSupplier(){ this.sm().hide(); if(this.supFrom==='product'){ this.pm().show(); } this.supFrom=''; },
+    async createSupplier(ev){
+      if(this.newSupEmail && !this.validEmail(this.newSupEmail)){ this.toast('Enter a valid email address.',false); return; }
+      const fd=new FormData(ev.target); fd.append('action','add_supplier');
+      const res=await fetch("{% url 'web:products' %}",{method:'POST',
+        headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':pcsrf()},body:fd});
+      const d=await res.json();
+      if(res.ok){
+        this.suppliers.push({id:d.id,name:d.name}); this.vendor=String(d.id); this.npSupplier=String(d.id);
+        ev.target.reset(); this.newSupEmail='';
+        this.toast('Supplier added: '+d.name,true);
+        // Close only the supplier modal; reopen the product modal (data intact).
+        const back=this.supFrom; this.sm().hide(); if(back==='product'){ this.pm().show(); } this.supFrom='';
+      } else { this.toast(d.error||'Error adding supplier',false); }
+    },
+    toast(text,ok){ const el=document.getElementById('scanToast'); el.classList.remove('text-bg-success','text-bg-danger'); el.classList.add(ok?'text-bg-success':'text-bg-danger'); document.getElementById('scanToastBody').textContent=text; bootstrap.Toast.getOrCreateInstance(el,{delay:1800}).show(); }
+  };
+}
+function pcsrf(){ return document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))?.split('=')[1]||''; }
+</script>
+{% endblock %}

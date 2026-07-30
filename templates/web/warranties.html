@@ -1,0 +1,149 @@
+{% extends "web/base.html" %}
+{% block title %}Warranties{% endblock %}
+{% block heading %}Warranties{% endblock %}
+{% block content %}
+
+<!-- Scan a unit barcode/serial to pull up its warranty for return/claim -->
+<div class="card shadow-sm mb-4 border-brand"><div class="card-body">
+  <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+    <span class="fw-medium"><i class="bi bi-upc-scan"></i> Scan to return / claim</span>
+    <input name="barcode" value="{{ barcode }}" placeholder="Scan or type unit barcode / serial…" autofocus
+           class="form-control form-control-sm" style="max-width:22rem">
+    <button class="btn btn-brand btn-sm">Find</button>
+    {% if scanned %}<a href="{% url 'web:warranties' %}" class="btn btn-light btn-sm">Clear</a>{% endif %}
+  </form>
+  {% if scanned %}
+    {% if not scanned.found %}
+      <div class="alert alert-warning small mt-3 mb-0">No unit, warranty or product found for <b>{{ scanned.barcode }}</b>.</div>
+    {% elif scanned.warranty %}
+    <!-- Exact single unit resolved -->
+    <div class="row g-3 mt-1">
+      <div class="col-md-3">
+        <div class="small text-secondary text-uppercase">Product</div>
+        <div class="fw-medium">{{ scanned.product.name|default:"—" }}</div>
+        <div class="small">Serial: <code>{{ scanned.warranty.serial_no|default:scanned.barcode }}</code></div>
+        {% if scanned.unit %}<div class="small">Unit: <span class="text-capitalize">{{ scanned.unit.get_status_display }}</span></div>{% endif %}
+      </div>
+      <div class="col-md-3">
+        <div class="small text-secondary text-uppercase">Selling info</div>
+        <div class="small">Price: <b>{{ scanned.product.selling_price|default:"—" }}</b></div>
+        <div class="small">Supplier: {{ scanned.supplier.name|default:"—" }}{% if scanned.supplier.phone %} · {{ scanned.supplier.phone }}{% endif %}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="small text-secondary text-uppercase">Warranty</div>
+        <div><span class="badge {% if scanned.warranty.live_status == 'expired' %}text-bg-danger{% elif scanned.warranty.live_status == 'expiring_soon' %}text-bg-warning{% elif scanned.warranty.live_status == 'claimed' %}text-bg-secondary{% else %}text-bg-success{% endif %}">{{ scanned.warranty.live_status_display }}</span></div>
+        <div class="small mt-1">Expires: <b>{{ scanned.warranty.expiry_date }}</b> · {{ scanned.warranty.period_months }} mo</div>
+      </div>
+      <div class="col-md-3">
+        <div class="small text-secondary text-uppercase">Customer</div>
+        <div class="small">{{ scanned.customer.name|default:"—" }}{% if scanned.customer.phone %} · {{ scanned.customer.phone }}{% endif %}</div>
+      </div>
+      <div class="col-12">
+        {% if is_owner or 'manage_service' in perms_set %}
+          {% if scanned.eligible %}
+          <button type="button" class="btn btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#claimModal"
+                  onclick="document.getElementById('claimWid').value={{ scanned.warranty.id }};document.getElementById('claimName').textContent='{{ scanned.product.name|escapejs }} ({{ scanned.warranty.serial_no|escapejs }})'">↩ Return / claim this unit</button>
+          {% else %}
+          <div class="alert alert-secondary small mb-0">{{ scanned.reason|default:"Not eligible for claim." }}</div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <!-- Product barcode resolved → pick which sold warranty to claim -->
+    <div class="d-flex flex-wrap gap-4 mt-3">
+      <div><div class="small text-secondary text-uppercase">Product</div><div class="fw-medium">{{ scanned.product.name|default:"—" }}</div>
+        <div class="small">Price: {{ scanned.product.selling_price|default:"—" }}{% if scanned.product.warranty_months %} · {{ scanned.product.warranty_months }} mo warranty{% endif %}</div></div>
+      <div><div class="small text-secondary text-uppercase">Supplier</div>
+        <div class="small">{{ scanned.supplier.name|default:"—" }}{% if scanned.supplier.phone %} · {{ scanned.supplier.phone }}{% endif %}</div></div>
+    </div>
+    {% if scanned.matches %}
+      <div class="small text-secondary mt-3 mb-1">Sold warranties for this product — pick the customer to claim:</div>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        <thead class="thead-3"><tr><th>Customer</th><th>Serial</th><th>Expiry</th><th class="text-center">Status</th><th class="text-end"></th></tr></thead>
+        <tbody>
+        {% for w in scanned.matches %}
+          <tr>
+            <td>{{ w.customer.name|default:"—" }}{% if w.customer.phone %}<div class="small text-secondary">{{ w.customer.phone }}</div>{% endif %}</td>
+            <td><code>{{ w.serial_no|default:"—" }}</code></td>
+            <td>{{ w.expiry_date }}</td>
+            <td class="text-center"><span class="badge {% if w.live_status == 'expired' %}text-bg-danger{% elif w.live_status == 'expiring_soon' %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ w.live_status_display }}</span></td>
+            <td class="text-end">
+              {% if is_owner or 'manage_service' in perms_set %}
+                {% if w.claimable %}
+                <button type="button" class="btn btn-outline-brand btn-sm py-0" data-bs-toggle="modal" data-bs-target="#claimModal"
+                        onclick="document.getElementById('claimWid').value={{ w.id }};document.getElementById('claimName').textContent='{{ scanned.product.name|escapejs }} — {{ w.customer.name|default:'walk-in'|escapejs }}'">↩ Claim</button>
+                {% else %}<span class="small text-secondary">Expired</span>{% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+    {% else %}
+      <div class="alert alert-secondary small mt-3 mb-0">{{ scanned.reason|default:"No sold warranty on record for this product." }}</div>
+    {% endif %}
+    {% endif %}
+  {% endif %}
+</div></div>
+
+{% if return_policy %}
+<div class="alert alert-light border small mb-4"><b>Return / warranty policy:</b> <span style="white-space:pre-line">{{ return_policy }}</span></div>
+{% endif %}
+
+<!-- Active (sold) warranties — coverage that started at sale -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body border-bottom fw-medium">Active warranties (sold items)</div>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm align-middle mb-0">
+      <thead class="thead-3"><tr>
+        <th>Product</th><th>Customer</th><th>Serial</th><th>Expiry</th>
+        <th class="text-center">Status</th><th class="text-end">Return / claim</th></tr></thead>
+      <tbody>
+        {% for w in active_warranties %}
+        <tr>
+          <td class="fw-medium">{{ w.product.name }}</td>
+          <td>{{ w.customer.name|default:"—" }}{% if w.customer.phone %}<div class="small text-secondary">{{ w.customer.phone }}</div>{% endif %}</td>
+          <td><code>{{ w.serial_no|default:"—" }}</code></td>
+          <td>{{ w.expiry_date }}</td>
+          <td class="text-center"><span class="badge {% if w.live_status == 'expired' %}text-bg-danger{% elif w.live_status == 'expiring_soon' %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ w.live_status_display }}</span></td>
+          <td class="text-end">
+            {% if is_owner or 'manage_service' in perms_set %}
+              {% if w.claimable %}
+              <button type="button" class="btn btn-outline-brand btn-sm py-0" data-bs-toggle="modal" data-bs-target="#claimModal"
+                      onclick="document.getElementById('claimWid').value={{ w.id }};document.getElementById('claimName').textContent='{{ w.product.name|escapejs }} ({{ w.serial_no|escapejs }})'">↩ Return / claim</button>
+              {% else %}<span class="small text-secondary">Expired</span>{% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">🛡️</div>
+            <div class="fw-semibold mt-2">No warranties yet</div>
+            <div class="small mb-3">Warranties appear here automatically when you sell an item that carries one.</div>
+          </td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Warranty return / claim modal -->
+{% if is_owner or 'manage_service' in perms_set %}
+<div class="modal fade" id="claimModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <form method="post"><div class="modal-header"><h5 class="modal-title">Return / warranty claim — <span id="claimName"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body vstack gap-2">{% csrf_token %}
+    <input type="hidden" name="action" value="claim"><input type="hidden" name="warranty_id" id="claimWid">
+    <label class="small">Product issue<textarea name="issue_description" required rows="2" class="form-control form-control-sm" placeholder="Describe the fault / reason for return"></textarea></label>
+    <label class="small">Expected return date<input type="date" name="expected_return_date" class="form-control form-control-sm"></label>
+    <label class="small">Resolution
+      <select name="resolution" class="form-select form-select-sm">
+        <option value="Repair">Repair under warranty</option>
+        <option value="Replace">Replace product</option>
+        <option value="Refund">Refund</option>
+        <option value="Rejected">Rejected (out of policy)</option>
+      </select></label>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-brand btn-sm">Record return/claim</button></div></form>
+</div></div></div>
+{% endif %}
+{% include "web/_pagination.html" %}
+{% endblock %}

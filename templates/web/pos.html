@@ -1,0 +1,162 @@
+{% extends "web/base.html" %}
+{% block title %}POS{% endblock %}
+{% block heading %}Point of Sale · Step 1: Add products{% endblock %}
+{% block content %}
+<form style="display:none">{% csrf_token %}</form>
+<div x-data="pos()" class="row g-3">
+  <!-- Product picker -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm"><div class="card-body">
+      <input x-model="search" @input.debounce.250ms="resolveFilter()" @keydown.enter.prevent="scan()" x-ref="scanbox" autofocus
+             placeholder="Search product / scan barcode (press Enter)" class="form-control form-control-sm mb-3">
+      <div class="overflow-auto" style="max-height:62vh">
+        <div class="row g-2">
+          <template x-for="p in filtered()" :key="p.id">
+            <div class="col-6 col-md-4">
+              <button @click="pick(p)" :disabled="p.stock<=0" class="pos-item text-start w-100 h-100 p-2">
+                <div class="small fw-medium" x-text="p.name"></div>
+                <div class="small" :class="p.stock<=0?'text-danger':'text-secondary'"
+                     x-text="fmt(p.price) + (p.stock<=0 ? ' · OUT OF STOCK' : ' · stock ' + p.stock)"></div>
+                <div class="text-secondary" style="font-size:.7rem" x-show="p.warranty>0" x-text="'🛡 '+p.warranty+' mo warranty'"></div>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Cart -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm"><div class="card-body d-flex flex-column">
+      <div class="fw-semibold mb-2">Cart <span class="badge text-bg-secondary" x-text="cart.length"></span></div>
+      <div class="flex-grow-1 overflow-auto" style="max-height:52vh">
+        <template x-for="(it,idx) in cart" :key="idx">
+          <div class="border-bottom pb-1 mb-1">
+            <div class="d-flex align-items-center gap-2 small">
+              <div class="flex-grow-1">
+                <div x-text="it.name"></div>
+                <div class="text-secondary" style="font-size:.72rem">
+                  <span x-text="'cost '+fmt(it.cost)"></span> ·
+                  <span class="text-success" x-text="'profit '+fmt(lineProfit(it))"></span>
+                  <span x-show="it.warranty>0" class="badge text-bg-light ms-1" x-text="'🛡 '+it.warranty+' mo'"></span>
+                </div>
+              </div>
+              <input type="number" min="1" x-model.number="it.quantity" class="form-control form-control-sm" style="width:3.5rem">
+              <input type="number" min="0" step="0.01" x-model.number="it.unit_price" class="form-control form-control-sm" style="width:5rem" title="Selling price">
+              <div class="text-end" style="width:4.5rem" x-text="(it.quantity*it.unit_price).toFixed(2)"></div>
+              <button @click="cart.splice(idx,1)" class="btn btn-sm btn-link text-danger p-0" aria-label="Remove item">✕</button>
+            </div>
+          </div>
+        </template>
+        <div x-show="!cart.length" class="text-secondary small">Empty. Click products or scan barcodes to add.</div>
+      </div>
+      <div class="mt-3 pt-3 border-top vstack gap-1">
+        <div class="d-flex justify-content-between small text-secondary"><span>Selling total</span><span x-text="fmt(total())"></span></div>
+        <div class="d-flex justify-content-between small text-secondary"><span>Purchase cost</span><span x-text="fmt(costTotal())"></span></div>
+        <div class="d-flex justify-content-between fw-semibold text-success"><span>Est. profit</span><span x-text="fmt(profitTotal())"></span></div>
+        <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-1 mt-1"><span>Total</span><span x-text="fmt(total())"></span></div>
+        <button @click="proceed()" :disabled="!cart.length" class="btn btn-brand w-100 mt-2">Continue to customer &amp; payment →</button>
+        <div x-show="msg" x-text="msg" class="text-center small text-danger"></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Scan feedback toast -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090">
+  <div id="scanToast" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div id="scanToastBody" class="toast-body"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+function pos(){
+  return {
+    search:'', cart:[], msg:'',
+    curr:"{{ current_shop.currency|escapejs }}",
+    products: [{% for p in products %}{id:{{ p.id }},name:"{{ p.name|escapejs }}",sku:"{{ p.sku|escapejs }}",price:{{ p.selling_price }},unit_price:{{ p.selling_price }},cost:{{ p.cost_price|default:0 }},warranty:{{ p.warranty_months|default:0 }},stock:{{ p.current_stock }},barcode:"{{ p.barcode|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
+    unitMatch:null,
+    localMatches(){ const s=this.search.toLowerCase().trim(); return this.products.filter(p=>!s
+        || p.name.toLowerCase().includes(s)
+        || (p.barcode && p.barcode.toLowerCase().includes(s))
+        || (p.sku && p.sku.toLowerCase().includes(s))); },
+    filtered(){
+      const local=this.localMatches();
+      // No name/product-barcode/SKU hit but a per-unit barcode resolved → show it.
+      if(!local.length && this.unitMatch && this.search.trim()) return [this.unitMatch];
+      return local;
+    },
+    // Resolve a scanned per-unit barcode server-side so the tile list filters (#6).
+    async resolveFilter(){
+      const code=this.search.trim();
+      if(!code || this.localMatches().length){ this.unitMatch=null; return; }
+      try{
+        const r=await fetch("{% url 'web:barcode_resolve' %}?code="+encodeURIComponent(code));
+        if(r.ok){ const d=await r.json();
+          // Display tile carries the SCANNED UNIT's price, not the cached
+          // product's latest price (so an older batch shows its own price).
+          const base=this.products.find(x=>x.id===d.id);
+          this.unitMatch={id:d.id,name:d.name,sku:'',price:Number(d.price),unit_price:Number(d.price),
+            cost:Number(d.cost),warranty:d.warranty,stock:base?base.stock:Number(d.stock),barcode:d.barcode};
+        } else { this.unitMatch=null; }
+      }catch(e){ this.unitMatch=null; }
+    },
+    add(p, priceOverride){ if(p.stock<=0){ this.msg=p.name+' is out of stock.'; return false; }
+      // A scanned per-unit barcode carries ITS batch price; different-price
+      // batches of the same product stay as separate cart lines.
+      const price=Number(priceOverride!=null ? priceOverride : p.price);
+      const e=this.cart.find(i=>i.id===p.id && Number(i.unit_price)===price);
+      if(e){ if(e.quantity>=p.stock){ this.msg='Only '+p.stock+' in stock.'; return false;} e.quantity++;}
+      else {this.cart.push({id:p.id,name:p.name,unit_price:price,cost:Number(p.cost),warranty:p.warranty,quantity:1});} return true; },
+    fmt(n){ return this.curr+' '+(Number(n)||0).toFixed(2); },
+    // Tile click: add to cart, then reset the search bar (and unit match).
+    pick(p){ if(this.add(p)){ this.search=''; this.unitMatch=null; this.$refs.scanbox && this.$refs.scanbox.focus(); } else { this.showToast(this.msg,false); } },
+    lineProfit(it){ return (it.unit_price-it.cost)*it.quantity; },
+    costTotal(){ return this.cart.reduce((s,i)=>s+i.cost*i.quantity,0); },
+    profitTotal(){ return this.cart.reduce((s,i)=>s+this.lineProfit(i),0); },
+    async scan(){
+      const code=this.search.trim(); if(!code)return;
+      // Exact PRODUCT barcode → product's default price.
+      let p=this.products.find(x=>x.barcode && x.barcode===code);
+      let override=null;
+      if(!p){
+        // Per-unit barcode → resolve server-side; use THIS unit's batch price.
+        try{
+          const r=await fetch("{% url 'web:barcode_resolve' %}?code="+encodeURIComponent(code));
+          if(r.ok){ const d=await r.json();
+            override=Number(d.price);
+            p=this.products.find(x=>x.id===d.id) ||
+              {id:d.id,name:d.name,price:Number(d.price),unit_price:Number(d.price),cost:Number(d.cost),warranty:d.warranty,stock:Number(d.stock),barcode:d.barcode};
+          }
+        }catch(e){}
+      }
+      // Last resort: a single fuzzy name/SKU match → product price.
+      if(!p){ const f=this.filtered(); if(f.length===1){ p=f[0]; } }
+      if(!p){ this.showToast('No product for “'+code+'”', false); this.search=''; return; }
+      if(this.add(p, override)){ this.showToast('Added '+p.name, true); } else { this.showToast(this.msg, false); }
+      this.search=''; this.unitMatch=null; this.$refs.scanbox && this.$refs.scanbox.focus();
+    },
+    showToast(text, ok){
+      const el=document.getElementById('scanToast');
+      el.classList.remove('text-bg-success','text-bg-danger');
+      el.classList.add(ok?'text-bg-success':'text-bg-danger');
+      document.getElementById('scanToastBody').textContent=text;
+      bootstrap.Toast.getOrCreateInstance(el,{delay:1800}).show();
+    },
+    total(){ return this.cart.reduce((s,i)=>s+i.quantity*i.unit_price,0); },
+    async proceed(){
+      if(!this.cart.length)return; this.msg='';
+      const res=await fetch("{% url 'web:pos_cart_save' %}",{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf()},
+        body:JSON.stringify({items:this.cart.map(i=>({product:i.id,quantity:i.quantity,unit_price:i.unit_price}))})});
+      const d=await res.json();
+      if(res.ok){ window.location=d.next; } else { this.msg=d.error||'Error'; }
+    }
+  };
+}
+function csrf(){ return document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))?.split('=')[1]||''; }
+</script>
+{% endblock %}

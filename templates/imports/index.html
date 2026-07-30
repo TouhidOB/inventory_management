@@ -1,0 +1,58 @@
+{% extends "platform/base.html" %}
+{% block title %}Data Import{% endblock %}
+{% block heading %}📥 Data Import{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body border-bottom fw-medium">New import</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'imports:upload' %}" enctype="multipart/form-data" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label class="form-label small">Target shop</label>
+        <select name="shop" class="form-select" required>
+          <option value="">— choose shop —</option>
+          {% for s in shops %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">Import type</label>
+        <select name="import_type" class="form-select" required>
+          {% for val, label in types %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">File (CSV or XLSX)</label>
+        <input type="file" name="file" accept=".csv,.xlsx" class="form-control" required>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-brand w-100">Upload →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body border-bottom fw-medium">Recent import jobs</div>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle mb-0">
+      <thead class="thead-1"><tr>
+        <th>Created</th><th>Shop</th><th>Type</th><th>Status</th>
+        <th class="text-end">Rows</th><th class="text-end">Created</th><th class="text-end">Updated</th><th></th></tr></thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr>
+          <td class="text-nowrap small">{{ j.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ j.shop.name }}</td>
+          <td>{{ j.get_import_type_display }}</td>
+          <td><span class="badge text-bg-secondary">{{ j.get_status_display }}</span></td>
+          <td class="text-end">{{ j.total_rows }}</td>
+          <td class="text-end">{{ j.created_count }}</td>
+          <td class="text-end">{{ j.updated_count }}</td>
+          <td class="text-end"><a href="{% url 'imports:detail' j.id %}">Open</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="8" class="text-center text-secondary py-4">No imports yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "platform/base.html" %}
+{% block title %}Manual Payments{% endblock %}
+{% block heading %}Manual Payment Review{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body border-bottom"><input data-filter="#payTable" placeholder="Filter payments…" class="form-control form-control-sm" style="max-width:24rem"></div>
+  <div class="table-responsive">
+    <table id="payTable" class="table table-striped table-sm align-middle mb-0">
+      <thead class="thead-2"><tr>
+        <th>Shop</th><th>Amount</th><th>Method</th><th>Reference</th>
+        <th>Proof</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.shop.name }}</td>
+          <td>৳ {{ p.amount }}</td>
+          <td class="text-capitalize">{{ p.get_method_display }}</td>
+          <td class="text-secondary">{{ p.payer_reference }}</td>
+          <td>{% if p.proof %}<a href="{{ p.proof.url }}" target="_blank">view</a>{% else %}—{% endif %}</td>
+          <td><span class="badge {% if p.status == 'approved' %}text-bg-success{% elif p.status == 'rejected' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ p.get_status_display }}</span></td>
+          <td class="text-end">
+            {% if p.status == 'pending_review' %}
+            <form method="post" action="{% url 'platform:payment_review' p.id %}" class="d-flex gap-1 justify-content-end">
+              {% csrf_token %}
+              <input name="reason" placeholder="reason" class="form-control form-control-sm" style="width:6rem">
+              <button name="decision" value="approve" class="btn btn-success btn-sm py-0">Approve</button>
+              <button name="decision" value="reject" class="btn btn-danger btn-sm py-0">Reject</button>
+            </form>
+            {% else %}<span class="small text-secondary">{{ p.reviewed_at|date:"M d" }}</span>{% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr data-empty><td colspan="7" class="text-center text-secondary py-4">No manual payments.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

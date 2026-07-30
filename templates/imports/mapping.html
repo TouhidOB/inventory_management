@@ -1,0 +1,61 @@
+{% extends "platform/base.html" %}
+{% load import_extras %}
+{% block title %}Map columns{% endblock %}
+{% block heading %}📥 Map columns — {{ job.get_import_type_display }} → {{ job.shop.name }}{% endblock %}
+{% block content %}
+<div class="mb-3 small text-secondary">Step 2 of 4 — match each platform field to a column in your file. Only mapped columns are read; everything else is ignored.</div>
+
+{% if templates %}
+<form method="post" class="card card-body shadow-sm mb-3 flex-row align-items-end gap-2">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="load">
+  <div class="flex-grow-1">
+    <label class="form-label small mb-1">Load a saved mapping template</label>
+    <select name="template" class="form-select form-select-sm">
+      {% for t in templates %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-outline-secondary btn-sm">Load</button>
+</form>
+{% endif %}
+
+<form method="post" class="card shadow-sm">
+  {% csrf_token %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead class="thead-2"><tr><th style="width:30%">Platform field</th><th>Source column</th></tr></thead>
+      <tbody>
+        {% for f in fields %}
+        <tr>
+          <td class="fw-medium">{{ f.label }}
+            {% if f.required %}<span class="text-danger">*</span>{% else %}<span class="text-secondary small">(optional)</span>{% endif %}
+          </td>
+          <td>
+            <select name="map_{{ f.name }}" class="form-select form-select-sm">
+              <option value="">— skip —</option>
+              {% for c in columns %}
+                <option value="{{ c.index }}" {% if mapping|get_item:f.name == c.index %}selected{% endif %}>
+                  {{ c.header }} (Column {{ c.index|add:1 }})
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-body border-top d-flex flex-wrap gap-3 align-items-center">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="save_template" id="save_template">
+      <label class="form-check-label small" for="save_template">Save this mapping as a template</label>
+    </div>
+    <input type="text" name="template_name" class="form-control form-control-sm" style="width:16rem" placeholder="Template name">
+    <div class="ms-auto d-flex gap-2">
+      <a href="{% url 'imports:index' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+      <button class="btn btn-brand btn-sm">Validate &amp; preview →</button>
+    </div>
+  </div>
+</form>
+<div class="small text-danger mt-2">* required fields must be mapped before you can continue.</div>
+{% endblock %}

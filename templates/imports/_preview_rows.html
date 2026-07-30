@@ -1,0 +1,32 @@
+<div class="table-responsive" id="preview-rows">
+  <table class="table table-sm table-striped align-middle mb-0">
+    <thead class="thead-3"><tr>
+      <th>#</th><th>Disposition</th><th>Data</th><th>Messages</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.row_number }}</td>
+        <td>
+          {% if r.status == 'error' %}<span class="badge text-bg-danger">error</span>
+          {% elif r.errors %}<span class="badge text-bg-warning">warning</span>
+          {% endif %}
+          {% if r.status == 'will_create' %}<span class="badge text-bg-success">will create</span>
+          {% elif r.status == 'will_update' %}<span class="badge text-bg-info">will update</span>
+          {% elif r.status == 'committed' %}<span class="badge text-bg-secondary">committed</span>{% endif %}
+        </td>
+        <td class="small">
+          {% for k, v in r.cleaned_data.items %}{% if k != '_previous' %}<span class="text-secondary">{{ k }}=</span>{{ v }}&nbsp; {% endif %}{% endfor %}
+        </td>
+        <td class="small text-danger">{% for m in r.errors %}{{ m }}<br>{% endfor %}</td>
+      </tr>
+      {% empty %}<tr><td colspan="4" class="text-center text-secondary py-4">No rows.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% if page_obj.has_other_pages %}
+  <div class="p-2 d-flex gap-2 justify-content-center">
+    {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}{% if only %}&only={{ only }}{% endif %}">← Prev</a>{% endif %}
+    <span class="small align-self-center">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}{% if only %}&only={{ only }}{% endif %}">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>

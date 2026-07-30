@@ -1,0 +1,32 @@
+{% extends "web/base.html" %}
+{% block title %}Video tutorials{% endblock %}
+{% block heading %}Video tutorials{% endblock %}
+{% block content %}
+<div class="vstack gap-3">
+  <div class="text-secondary small">Learn StockWhisk step by step. Watch in order — each video builds on the last.</div>
+
+  {% for v in videos %}
+  <div class="card shadow-sm"><div class="card-body">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="badge btn-brand">{{ v.sequence }}</span>
+      <span class="fw-semibold">{{ v.title }}</span>
+    </div>
+    {% if v.embed_url %}
+    <div class="ratio ratio-16x9" style="max-width:720px;border-radius:10px;overflow:hidden">
+      <iframe src="{{ v.embed_url }}" title="{{ v.title }}" allowfullscreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    {% else %}
+    <a href="{{ v.youtube_url }}" target="_blank" rel="noopener" class="btn btn-outline-brand btn-sm"><i class="bi bi-box-arrow-up-right"></i> Watch on YouTube</a>
+    {% endif %}
+  </div></div>
+  {% empty %}
+  <div class="card shadow-sm"><div class="card-body text-center text-secondary py-5">
+    <div style="font-size:2.5rem;line-height:1">🎬</div>
+    <div class="fw-semibold mt-2">No tutorials yet</div>
+    <div class="small">Video guides will appear here soon.</div>
+  </div></div>
+  {% endfor %}
+</div>
+{% endblock %}

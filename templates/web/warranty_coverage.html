@@ -1,0 +1,31 @@
+{% extends "web/base.html" %}
+{% block title %}Warranty coverage{% endblock %}
+{% block heading %}Warranty coverage{% endblock %}
+{% block content %}
+<!-- Product-level warranty overview: every product on the list -->
+<div class="card shadow-sm">
+  <div class="card-body border-bottom d-flex align-items-center justify-content-between gap-2">
+    <span class="fw-medium">Products &amp; warranty coverage</span>
+    <input data-filter="#warrTable" placeholder="Filter products…" class="form-control form-control-sm" style="max-width:18rem">
+  </div>
+  <div class="table-responsive">
+    <table id="warrTable" class="table table-striped table-sm align-middle mb-0">
+      <thead class="thead-1"><tr>
+        <th>Product</th><th>Supplier</th><th class="text-end">Selling price</th>
+        <th class="text-center">Warranty</th><th class="text-center">Sold in-warranty</th></tr></thead>
+      <tbody>
+        {% for p in products_page %}
+        <tr>
+          <td class="fw-medium">{{ p.name }}</td>
+          <td>{{ p.supplier.name|default:"—" }}</td>
+          <td class="text-end">{{ p.selling_price }}</td>
+          <td class="text-center">{% if p.warranty_months %}{{ p.warranty_months }} mo{% else %}<span class="text-secondary">—</span>{% endif %}</td>
+          <td class="text-center">{% if p.covered_units %}<span class="badge text-bg-success">{{ p.covered_units }}</span>{% else %}<span class="text-secondary">0</span>{% endif %}</td>
+        </tr>
+        {% empty %}<tr data-empty><td colspan="5" class="text-center text-secondary py-4">No products.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

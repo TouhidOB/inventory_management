@@ -1,0 +1,35 @@
+{% extends "platform/base.html" %}
+{% block title %}Create shop{% endblock %}
+{% block heading %}Create a new shop{% endblock %}
+{% block content %}
+<div class="card shadow-sm" style="max-width:44rem"><div class="card-body">
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    <div class="col-12"><label class="small w-100">Shop name
+      <input name="name" required class="form-control mt-1"></label></div>
+    <div class="col-md-6"><label class="small w-100">Business type
+      <select name="business_type" class="form-select mt-1">
+        {% for v,l in business_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+      </select></label></div>
+    <div class="col-md-6"><label class="small w-100">Plan
+      <select name="plan" class="form-select mt-1">
+        <option value="">Default (Free + trial)</option>
+        {% for p in plans %}<option value="{{ p.id }}">{{ p.name }} ({{ p.tier }})</option>{% endfor %}
+      </select></label></div>
+    <div class="col-md-6"><label class="small w-100">Shop phone
+      <input name="phone" class="form-control mt-1"></label></div>
+    <div class="col-12 border-top pt-3 fw-semibold small">Owner account</div>
+    <div class="col-md-6"><label class="small w-100">Owner name
+      <input name="owner_name" class="form-control mt-1"></label></div>
+    <div class="col-md-6"><label class="small w-100">Owner email
+      <input name="owner_email" type="email" required class="form-control mt-1"></label></div>
+    <div class="col-12"><label class="small w-100">Owner password
+      <input name="owner_password" type="text" required minlength="8" class="form-control mt-1"
+             placeholder="min 8 chars — share with the owner"></label></div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-brand btn-sm">Create shop</button>
+      <a href="{% url 'platform:shops' %}" class="btn btn-light btn-sm">Cancel</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "web/base.html" %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Reports{% endblock %}
+{% block content %}
+{% include "web/_analytics_charts.html" %}
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-4"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold mb-2">Profit (30d)</div>
+    <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+      <tr><td class="text-secondary">Revenue</td><td class="text-end">{{ profit.revenue }}</td></tr>
+      <tr><td class="text-secondary">COGS</td><td class="text-end">{{ profit.cogs }}</td></tr>
+      <tr><td class="text-secondary">Gross</td><td class="text-end">{{ profit.gross_profit }}</td></tr>
+      <tr><td class="text-secondary">Expenses</td><td class="text-end">{{ profit.expenses }}</td></tr>
+      <tr><td class="fw-semibold">Net</td><td class="text-end fw-semibold text-success">{{ profit.net_profit }}</td></tr>
+    </table></div>
+  </div></div></div>
+  <div class="col-lg-4"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold mb-2">Position</div>
+    <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+      <tr><td class="text-secondary">Cash</td><td class="text-end">{{ position.cash_balance }}</td></tr>
+      <tr><td class="text-secondary">Receivables</td><td class="text-end">{{ position.receivables }}</td></tr>
+      <tr><td class="text-secondary">Payables</td><td class="text-end">{{ position.payables }}</td></tr>
+    </table></div>
+  </div></div></div>
+  <div class="col-lg-4"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold mb-2">Cash flow (30d)</div>
+    <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+      <tr><td class="text-secondary">Opening</td><td class="text-end">{{ cash_flow.opening_cash }}</td></tr>
+      <tr><td class="text-secondary">Inflow</td><td class="text-end text-success">{{ cash_flow.inflow }}</td></tr>
+      <tr><td class="text-secondary">Outflow</td><td class="text-end text-danger">{{ cash_flow.outflow }}</td></tr>
+      <tr><td class="fw-semibold">Closing</td><td class="text-end fw-semibold">{{ cash_flow.closing_cash }}</td></tr>
+    </table></div>
+  </div></div></div>
+</div>
+
+<div class="card shadow-sm"><div class="card-body">
+  <div class="fw-semibold mb-3">Download reports</div>
+  <div class="row g-2">
+    {% for r in report_types %}
+    <div class="col-sm-6 col-md-4">
+      <div class="border rounded p-3 small d-flex align-items-center justify-content-between">
+        <span class="text-capitalize">{{ r|cut:"_" }}</span>
+        <span class="d-flex gap-2">
+          <a href="{% url 'web:report_export' r %}?format=csv">CSV</a>
+          <a href="{% url 'web:report_export' r %}?format=excel" class="text-success">Excel</a>
+          <a href="{% url 'web:report_export' r %}?format=pdf" class="text-danger">PDF</a>
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div></div>
+{% endblock %}

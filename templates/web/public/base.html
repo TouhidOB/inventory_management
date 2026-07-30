@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}StockWhisk — Retail operating system{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{--brand-50:#f3eee9;--brand-100:#D2C1B6;--brand-500:#456882;--brand-700:#234C6A;--brand-900:#1B3C53;--bs-primary:#234C6A;--bs-primary-rgb:35,76,106;}
+    .bg-brand{background:var(--brand-900)!important;}
+    .bg-brand-grad{background:linear-gradient(90deg,var(--brand-900),var(--brand-500));}
+    .text-brand{color:var(--brand-700)!important;}
+    .btn-brand{background:var(--brand-700);border-color:var(--brand-700);color:#fff;}
+    .btn-brand:hover{background:var(--brand-900);color:#fff;}
+    .btn-brand-light{background:var(--brand-100);color:var(--brand-900);}
+    .btn-brand-light:hover{background:#fff;color:var(--brand-900);}
+    a{color:var(--brand-700);}
+    .hero a.text-white, footer a{color:inherit;}
+  </style>
+</head>
+<body class="h-100 bg-white">
+<header class="bg-brand text-white">
+  <div class="container py-3 d-flex align-items-center justify-content-between">
+    <a href="{% url 'web:home' %}" class="fs-4 fw-bold text-white text-decoration-none">StockWhisk</a>
+    <nav class="d-flex align-items-center gap-3 small">
+      <a href="{% url 'web:features' %}" class="text-white text-decoration-none">Features</a>
+      <a href="{% url 'web:pricing' %}" class="text-white text-decoration-none">Pricing</a>
+      <a href="{% url 'web:contact' %}" class="text-white text-decoration-none">Contact</a>
+      <a href="{% url 'web:login' %}" class="text-white text-decoration-none">Log in</a>
+      <a href="{% url 'web:signup' %}" class="btn btn-brand-light btn-sm fw-medium">Request access</a>
+    </nav>
+  </div>
+</header>
+{% if messages %}<div class="container pt-3">{% for m in messages %}
+  <div class="alert {% if m.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} py-2 px-3">{{ m }}</div>
+{% endfor %}</div>{% endif %}
+<main>{% block content %}{% endblock %}</main>
+<footer class="mt-5">
+  <div class="bg-brand-grad text-white">
+    <div class="container py-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 text-center text-sm-start">
+      <div>
+        <div class="fs-5 fw-bold text-white">Run your shop the smart way.</div>
+        <div class="small text-white-50 mt-1">POS, inventory, dues &amp; accounting — one system, set up for you.</div>
+      </div>
+      <a href="{% url 'web:signup' %}" class="btn btn-light fw-semibold text-nowrap">Request access →</a>
+    </div>
+  </div>
+  <div class="bg-brand text-white-50">
+    <div class="container py-5">
+      <div class="row g-4">
+        <div class="col-sm-6 col-lg-3">
+          <div class="fs-5 fw-bold text-white">StockWhisk</div>
+          <p class="mt-2 small">Retail ERP + POS + Inventory + Accounting, built for Bangladeshi shops.</p>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="fw-semibold text-white mb-3">Product</div>
+          <ul class="list-unstyled small vstack gap-2">
+            <li><a href="{% url 'web:features' %}" class="text-white-50 text-decoration-none">Features</a></li>
+            <li><a href="{% url 'web:pricing' %}" class="text-white-50 text-decoration-none">Pricing</a></li>
+            <li><a href="{% url 'web:signup' %}" class="text-white-50 text-decoration-none">Request access</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="fw-semibold text-white mb-3">Company</div>
+          <ul class="list-unstyled small vstack gap-2">
+            <li><a href="{% url 'web:contact' %}" class="text-white-50 text-decoration-none">Contact</a></li>
+            <li><a href="{% url 'web:login' %}" class="text-white-50 text-decoration-none">Log in</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="fw-semibold text-white mb-3">Get in touch</div>
+          <ul class="list-unstyled small vstack gap-2">
+            <li>✉ <a href="mailto:ob.touhid@gmail.com" class="text-white-50 text-decoration-none">ob.touhid@gmail.com</a></li>
+            <li>📞 <a href="tel:+8801613511887" class="text-white-50 text-decoration-none">+880 16 1351 1887</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="border-top border-secondary border-opacity-25">
+      <div class="container py-3 small d-flex flex-column flex-sm-row justify-content-between gap-2">
+        <span>© {% now "Y" %} StockWhisk. All rights reserved.</span>
+        <span>Made in Bangladesh 🇧🇩</span>
+      </div>
+    </div>
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

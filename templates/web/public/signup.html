@@ -1,0 +1,25 @@
+{% extends "web/public/base.html" %}
+{% block title %}Request access · StockWhisk{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:32rem">
+  <h1 class="fs-3 fw-bold text-center">Request access</h1>
+  <p class="text-center text-secondary small mt-1">Tell us about your shop. Our team reviews every request and sets up your account — accounts are provisioned by StockWhisk, not self-service.</p>
+  <form method="post" class="card border mt-4"><div class="card-body vstack gap-3">
+    {% csrf_token %}
+    <input type="text" name="website" class="d-none" tabindex="-1" autocomplete="off">
+    <label class="small">Shop name<input name="shop_name" required class="form-control mt-1"></label>
+    <label class="small">Business type
+      <select name="business_type" class="form-select mt-1">
+        {% for v,l in business_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+      </select></label>
+    <label class="small">Your name<input name="owner_name" required class="form-control mt-1"></label>
+    <label class="small">Email<input name="owner_email" type="email" required class="form-control mt-1"></label>
+    <label class="small">Phone<input name="phone" class="form-control mt-1"></label>
+    <label class="small">Anything we should know? <span class="text-secondary">(optional)</span>
+      <textarea name="note" rows="3" class="form-control mt-1"></textarea></label>
+    <button class="btn btn-brand">Request access</button>
+    <div class="text-center small text-secondary">Already have an account? <a href="{% url 'web:login' %}">Log in</a></div>
+  </div></form>
+  <p class="text-center small text-secondary mt-3">Prefer to talk first? <a href="{% url 'web:contact' %}">Contact us →</a></p>
+</div>
+{% endblock %}

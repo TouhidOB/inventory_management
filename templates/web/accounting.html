@@ -1,0 +1,84 @@
+{% extends "web/base.html" %}
+{% block title %}Accounting{% endblock %}
+{% block heading %}Accounting{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="btn-group btn-group-sm shadow-sm" role="group">
+    <a href="?period=daily"   class="btn {% if period == 'daily' %}btn-brand{% else %}btn-light{% endif %}">Daily</a>
+    <a href="?period=weekly"  class="btn {% if period == 'weekly' %}btn-brand{% else %}btn-light{% endif %}">Weekly</a>
+    <a href="?period=monthly" class="btn {% if period == 'monthly' %}btn-brand{% else %}btn-light{% endif %}">Monthly</a>
+    <a href="?period=yearly"  class="btn {% if period == 'yearly' %}btn-brand{% else %}btn-light{% endif %}">Yearly</a>
+  </div>
+  <div class="small text-secondary">{{ range_start }} → {{ range_end }}</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><div class="small text-secondary">Income (revenue)</div><div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.revenue }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><div class="small text-secondary">COGS</div><div class="fs-4 fw-bold">{{ summary.cogs }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><div class="small text-secondary">Expenses</div><div class="fs-4 fw-bold text-danger">{{ summary.expenses }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><div class="small text-secondary">Net profit</div><div class="fs-4 fw-bold text-success">{{ current_shop.currency }} {{ summary.net_profit }}</div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold small mb-2">Revenue trend</div>
+      <canvas id="acctChart" height="120"></canvas>
+    </div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold small mb-2">Cash flow</div>
+      <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+        <tr><td class="text-secondary">Opening</td><td class="text-end">{{ cash_flow.opening_cash }}</td></tr>
+        <tr><td class="text-secondary">Inflow</td><td class="text-end text-success">{{ cash_flow.inflow }}</td></tr>
+        <tr><td class="text-secondary">Outflow</td><td class="text-end text-danger">{{ cash_flow.outflow }}</td></tr>
+        <tr class="fw-semibold"><td>Closing</td><td class="text-end">{{ cash_flow.closing_cash }}</td></tr>
+      </table></div>
+      <div class="fw-semibold small mt-3 mb-1">Gross profit</div>
+      <div class="fs-5 fw-bold">{{ current_shop.currency }} {{ summary.gross_profit }}</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span class="fw-semibold text-brand">Transaction flow (income &amp; expenses)</span>
+    <form method="get" class="d-flex flex-wrap align-items-end gap-2">
+      <input type="hidden" name="period" value="{{ period }}">
+      <label class="small text-secondary">From
+        <input type="date" name="from" value="{{ tx_from }}" class="form-control form-control-sm"></label>
+      <label class="small text-secondary">To
+        <input type="date" name="to" value="{{ tx_to }}" class="form-control form-control-sm"></label>
+      <button class="btn btn-brand btn-sm">Filter</button>
+      {% if tx_from or tx_to %}<a href="?period={{ period }}" class="btn btn-outline-secondary btn-sm">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm align-middle mb-0">
+      <thead class="thead-3"><tr>
+        <th>Date</th><th>Description</th><th>Account</th><th>Source</th>
+        <th class="text-end">Income</th><th class="text-end">Expense</th></tr></thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td class="text-secondary text-nowrap small">{{ t.created_at|date:"M d, Y H:i" }}</td>
+          <td>{{ t.description|default:"—" }}</td>
+          <td class="text-capitalize">{{ t.get_account_display }}</td>
+          <td class="small text-secondary">{{ t.source_type|default:"—" }}</td>
+          <td class="text-end text-success">{% if t.amount > 0 %}+{{ current_shop.currency }} {{ t.amount }}{% else %}—{% endif %}</td>
+          <td class="text-end text-danger">{% if t.amount < 0 %}{{ current_shop.currency }} {{ t.amount|cut:"-" }}{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-4">No transactions in this period.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+
+<script>
+new Chart(document.getElementById('acctChart'),{type:'bar',
+  data:{labels:{{ trend_labels|safe }},datasets:[{label:'Revenue',data:{{ trend_values|safe }},backgroundColor:'#456882'}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+</script>
+{% endblock %}

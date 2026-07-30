@@ -1,0 +1,94 @@
+{% comment %}Permission-aware grouped sidebar. Accordion: one group open at a time
+(shared `openGroup`/`setGroup` from base x-data). `collapsed` = icon-rail width.{% endcomment %}
+<a href="{% url 'web:dashboard' %}" title="Dashboard" class="nav-link {% if active == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> <span x-show="!collapsed" x-cloak>Dashboard</span></a>
+<a href="{% url 'web:pos' %}" title="POS" class="nav-link {% if active == 'pos' %}active{% endif %}"><i class="bi bi-cart3"></i> <span x-show="!collapsed" x-cloak>POS</span></a>
+
+{% comment %}——— Products group ———{% endcomment %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('products')" title="Products" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-box-seam"></i> <span x-show="!collapsed" x-cloak>Products</span></span>
+    <i class="bi" :class="openGroup==='products'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='products'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    <a href="{% url 'web:products' %}" title="Product list" class="nav-link {% if active == 'products' %}active{% endif %}"><i class="bi bi-list-ul"></i> <span x-show="!collapsed" x-cloak>Product list</span></a>
+    <a href="{% url 'web:purchase_scan' %}" title="Purchase product" class="nav-link {% if active == 'purchase' %}active{% endif %}"><i class="bi bi-upc-scan"></i> <span x-show="!collapsed" x-cloak>Purchase product</span></a>
+    <a href="{% url 'web:item_lookup' %}" title="Item lookup" class="nav-link {% if active == 'item_lookup' %}active{% endif %}"><i class="bi bi-qr-code-scan"></i> <span x-show="!collapsed" x-cloak>Item lookup</span></a>
+    <a href="{% url 'web:barcodes' %}" title="Barcodes" class="nav-link {% if active == 'barcodes' %}active{% endif %}"><i class="bi bi-upc"></i> <span x-show="!collapsed" x-cloak>Barcodes</span></a>
+    <a href="{% url 'web:inventory' %}" title="Inventory" class="nav-link {% if active == 'inventory' %}active{% endif %}"><i class="bi bi-boxes"></i> <span x-show="!collapsed" x-cloak>Inventory & stock</span></a>
+    {% if is_owner or 'manage_purchasing' in perms_set %}
+    <a href="{% url 'web:suppliers' %}" title="Suppliers" class="nav-link {% if active == 'suppliers' %}active{% endif %}"><i class="bi bi-truck"></i> <span x-show="!collapsed" x-cloak>Suppliers</span></a>
+    <a href="{% url 'web:purchases' %}" title="Purchases" class="nav-link {% if active == 'purchases' %}active{% endif %}"><i class="bi bi-box-arrow-in-down"></i> <span x-show="!collapsed" x-cloak>Purchases</span></a>
+    {% endif %}
+  </div>
+</div>
+
+{% comment %}——— Sales group ———{% endcomment %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('sales')" title="Sales" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-receipt"></i> <span x-show="!collapsed" x-cloak>Sales</span></span>
+    <i class="bi" :class="openGroup==='sales'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='sales'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    <a href="{% url 'web:sales' %}" title="Invoices" class="nav-link {% if active == 'sales' %}active{% endif %}"><i class="bi bi-receipt-cutoff"></i> <span x-show="!collapsed" x-cloak>Invoices</span></a>
+    {% if is_owner or 'view_reports' in perms_set %}
+    <a href="{% url 'web:sold_products' %}" title="Sold products" class="nav-link {% if active == 'sold_products' %}active{% endif %}"><i class="bi bi-list-check"></i> <span x-show="!collapsed" x-cloak>Sold products</span></a>
+    <a href="{% url 'web:selling_details' %}" title="Selling details" class="nav-link {% if active == 'selling_details' %}active{% endif %}"><i class="bi bi-card-list"></i> <span x-show="!collapsed" x-cloak>Selling details</span></a>
+    {% endif %}
+  </div>
+</div>
+
+{% comment %}——— Customers group ———{% endcomment %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('customers')" title="Customers" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-people"></i> <span x-show="!collapsed" x-cloak>Customers</span></span>
+    <i class="bi" :class="openGroup==='customers'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='customers'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    <a href="{% url 'web:customers' %}" title="Customer list" class="nav-link {% if active == 'customers' %}active{% endif %}"><i class="bi bi-person-lines-fill"></i> <span x-show="!collapsed" x-cloak>Customer list</span></a>
+    <a href="{% url 'web:dues' %}" title="Dues" class="nav-link {% if active == 'dues' %}active{% endif %}"><i class="bi bi-cash-coin"></i> <span x-show="!collapsed" x-cloak>Dues</span></a>
+  </div>
+</div>
+
+{% comment %}——— Service group ———{% endcomment %}
+{% if is_owner or 'manage_service' in perms_set or 'view_service' in perms_set %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('service')" title="Service" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-tools"></i> <span x-show="!collapsed" x-cloak>Service</span></span>
+    <i class="bi" :class="openGroup==='service'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='service'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    <a href="{% url 'web:tickets' %}" title="Tickets" class="nav-link {% if active == 'tickets' %}active{% endif %}"><i class="bi bi-wrench-adjustable"></i> <span x-show="!collapsed" x-cloak>Repair tickets</span></a>
+    <a href="{% url 'web:warranties' %}" title="Warranties" class="nav-link {% if active == 'warranties' %}active{% endif %}"><i class="bi bi-shield-check"></i> <span x-show="!collapsed" x-cloak>Warranties</span></a>
+    <a href="{% url 'web:warranty_coverage' %}" title="Warranty coverage" class="nav-link {% if active == 'warranty_coverage' %}active{% endif %}"><i class="bi bi-shield-shaded"></i> <span x-show="!collapsed" x-cloak>Warranty coverage</span></a>
+  </div>
+</div>
+{% endif %}
+
+{% comment %}——— Finance group ———{% endcomment %}
+{% if is_owner or 'manage_expenses' in perms_set or 'view_profit' in perms_set or 'view_reports' in perms_set %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('finance')" title="Finance" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-bank"></i> <span x-show="!collapsed" x-cloak>Finance</span></span>
+    <i class="bi" :class="openGroup==='finance'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='finance'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    {% if is_owner or 'manage_expenses' in perms_set %}<a href="{% url 'web:expenses' %}" title="Expenses" class="nav-link {% if active == 'expenses' %}active{% endif %}"><i class="bi bi-cash-stack"></i> <span x-show="!collapsed" x-cloak>Expenses</span></a>{% endif %}
+    {% if is_owner or 'view_profit' in perms_set %}<a href="{% url 'web:accounting' %}" title="Accounting" class="nav-link {% if active == 'accounting' %}active{% endif %}"><i class="bi bi-calculator"></i> <span x-show="!collapsed" x-cloak>Accounting</span></a>{% endif %}
+    {% if is_owner or 'view_reports' in perms_set %}<a href="{% url 'web:reports' %}" title="Reports" class="nav-link {% if active == 'reports' %}active{% endif %}"><i class="bi bi-graph-up"></i> <span x-show="!collapsed" x-cloak>Reports</span></a>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% comment %}——— Admin group ———{% endcomment %}
+<div class="nav-group position-relative">
+  <a role="button" @click="setGroup('admin')" title="Admin" class="nav-link d-flex align-items-center justify-content-between">
+    <span class="text-truncate"><i class="bi bi-sliders"></i> <span x-show="!collapsed" x-cloak>Admin</span></span>
+    <i class="bi" :class="openGroup==='admin'?'bi-chevron-down':'bi-chevron-right'" x-show="!collapsed" x-cloak></i>
+  </a>
+  <div class="nav-children" x-show="openGroup==='admin'" x-cloak :class="collapsed ? '' : 'ms-3 border-start border-secondary border-opacity-25 ps-2'">
+    <a href="{% url 'web:notifications' %}" title="Notifications" class="nav-link {% if active == 'notifications' %}active{% endif %}"><i class="bi bi-bell"></i> <span x-show="!collapsed" x-cloak>Notifications</span></a>
+    <a href="{% url 'web:tutorials' %}" title="Video tutorials" class="nav-link {% if active == 'tutorials' %}active{% endif %}"><i class="bi bi-play-btn"></i> <span x-show="!collapsed" x-cloak>Video tutorials</span></a>
+    {% if is_owner or 'manage_users' in perms_set %}<a href="{% url 'web:users' %}" title="Users & Roles" class="nav-link {% if active == 'users' %}active{% endif %}"><i class="bi bi-key"></i> <span x-show="!collapsed" x-cloak>Users &amp; Roles</span></a>{% endif %}
+    <a href="{% url 'web:settings' %}" title="Settings" class="nav-link {% if active == 'settings' %}active{% endif %}"><i class="bi bi-gear"></i> <span x-show="!collapsed" x-cloak>Settings</span></a>
+  </div>
+</div>

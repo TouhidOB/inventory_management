@@ -1,0 +1,57 @@
+{% extends "platform/base.html" %}
+{% block title %}Overview{% endblock %}
+{% block heading %}Platform Overview{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Total shops</div><div class="fs-4 fw-bold">{{ total }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Active</div><div class="fs-4 fw-bold text-success">{{ active_shops }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">On trial</div><div class="fs-4 fw-bold text-warning">{{ trial }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-secondary">Suspended</div><div class="fs-4 fw-bold text-danger">{{ suspended }}</div></div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="small text-secondary">Pending manual payments</div>
+    <div class="fs-3 fw-bold">{{ pending_payments }}</div>
+    <a href="{% url 'platform:payments' %}" class="small text-decoration-none">Review queue →</a>
+  </div></div></div>
+  <div class="col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="small text-secondary">Unread messages</div>
+    <div class="fs-3 fw-bold">{{ unread_messages }}</div>
+    <a href="{% url 'platform:messages' %}" class="small text-decoration-none">Open inbox →</a>
+  </div></div></div>
+  <div class="col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="small text-secondary">Approved revenue (all time)</div>
+    <div class="fs-3 fw-bold">৳ {{ approved_revenue }}</div>
+  </div></div></div>
+  <div class="col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Shops by type</div>
+    {% for r in by_type %}<div class="d-flex justify-content-between small"><span class="text-capitalize">{{ r.business_type }}</span><span>{{ r.n }}</span></div>{% endfor %}
+  </div></div></div>
+</div>
+<div class="card shadow-sm mt-4">
+  <div class="card-body border-bottom d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Recent shops</span>
+    <span class="d-flex gap-3 align-items-center">
+      <a href="{% url 'platform:shop_create' %}" class="btn btn-brand btn-sm">+ Create shop</a>
+      <a href="{% url 'platform:shops' %}" class="small text-decoration-none">All shops →</a>
+    </span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm align-middle mb-0">
+      <thead class="thead-1"><tr><th>Shop</th><th>Plan</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for s in recent_shops %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td class="text-capitalize">{{ s.plan.tier|default:"—" }}</td>
+          <td>{% if s.is_active %}<span class="text-success">Active</span>{% else %}<span class="text-danger">Suspended</span>{% endif %}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'platform:impersonate' s.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-link btn-sm p-0">Login as →</button></form>
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="4" class="text-center text-secondary py-4">No shops yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "web/base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block heading %}Notifications{% endblock %}
+{% block content %}
+<form method="post" class="mb-3">{% csrf_token %}<button class="btn btn-light btn-sm">Mark all read</button></form>
+<div class="vstack gap-2">
+  {% for n in notifications %}
+  <div class="card shadow-sm {% if not n.is_read %}border-start border-4{% endif %}" {% if not n.is_read %}style="border-left-color:var(--brand-500)!important"{% endif %}>
+    <div class="card-body py-2">
+      <div class="d-flex justify-content-between">
+        <div class="fw-medium small">{{ n.title }}</div>
+        <div class="small text-secondary">{{ n.created_at|date:"M d H:i" }}</div>
+      </div>
+      {% if n.message %}<div class="small text-secondary" style="white-space:pre-line">{{ n.message }}</div>{% endif %}
+    </div>
+  </div>
+  {% empty %}<div class="text-center text-secondary py-5">
+    <div style="font-size:2.5rem;line-height:1">🔔</div>
+    <div class="fw-semibold mt-2">You’re all caught up</div>
+    <div class="small">Low-stock alerts, due reminders and updates will appear here.</div>
+  </div>{% endfor %}
+</div>
+{% endblock %}

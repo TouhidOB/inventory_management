@@ -1,0 +1,108 @@
+{% extends "web/base.html" %}
+{% block title %}Dues{% endblock %}
+{% block heading %}Due Management{% endblock %}
+{% block content %}
+<div x-data="{ tab:'receivable', collect:null, pay:null }" class="vstack gap-3">
+
+  <div class="row g-3">
+    <div class="col-sm-6"><div class="card shadow-sm"><div class="card-body">
+      <div class="small text-secondary">Receivable (customers owe us)</div>
+      <div class="fs-4 fw-semibold text-danger">{{ current_shop.currency }} {{ total_receivable }}</div>
+    </div></div></div>
+    <div class="col-sm-6"><div class="card shadow-sm"><div class="card-body">
+      <div class="small text-secondary">Payable (we owe suppliers)</div>
+      <div class="fs-4 fw-semibold text-warning">{{ current_shop.currency }} {{ total_payable }}</div>
+    </div></div></div>
+  </div>
+
+  <ul class="nav nav-pills">
+    <li class="nav-item"><button @click="tab='receivable'" :class="tab==='receivable'?'active btn-brand':''" class="nav-link">Receivables</button></li>
+    <li class="nav-item"><button @click="tab='payable'" :class="tab==='payable'?'active btn-brand':''" class="nav-link">Payables</button></li>
+  </ul>
+
+  <!-- Receivables -->
+  <div x-show="tab==='receivable'" class="card shadow-sm">
+    <div class="card-body border-bottom"><input data-filter="#recvTable" placeholder="Filter customer…" class="form-control form-control-sm" style="max-width:24rem"></div>
+    <div class="table-responsive">
+      <table id="recvTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-3"><tr>
+          <th>Customer</th><th>Phone</th><th class="text-end">Open invoices</th><th>Oldest due</th>
+          <th class="text-end">Due</th><th></th></tr></thead>
+        <tbody>
+          {% for c in receivables %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td class="text-secondary">{{ c.phone|default:"—" }}</td>
+            <td class="text-end">{{ c.open_invoices }}</td>
+            <td class="text-secondary small">{{ c.oldest_due|date:"M d, Y"|default:"—" }}</td>
+            <td class="text-end text-danger fw-semibold">{{ c.due_balance }}</td>
+            <td class="text-end">
+              {% if is_owner or 'manage_customers' in perms_set %}
+              <button @click="collect = (collect==={{ c.id }} ? null : {{ c.id }})" class="btn btn-link btn-sm p-0">Collect</button>{% endif %}
+            </td>
+          </tr>
+          <tr x-show="collect==={{ c.id }}" x-cloak class="table-active">
+            <td colspan="6">
+              <form method="post" class="d-flex flex-wrap gap-2 align-items-end">{% csrf_token %}
+                <input type="hidden" name="action" value="collect">
+                <input type="hidden" name="customer_id" value="{{ c.id }}">
+                <label class="small">Amount<input name="amount" type="number" step="0.01" max="{{ c.due_balance }}" required value="{{ c.due_balance }}" class="form-control form-control-sm" style="width:8rem"></label>
+                <label class="small">Method<select name="method" class="form-select form-select-sm">
+                  <option value="cash">Cash</option><option value="card">Card</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="bank">Bank</option></select></label>
+                <span class="small text-secondary">applied oldest invoice first</span>
+                <button class="btn btn-brand btn-sm">Collect payment</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">✅</div>
+            <div class="fw-semibold mt-2">All caught up</div>
+            <div class="small mb-3">No customer owes you money right now.</div>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Payables -->
+  <div x-show="tab==='payable'" x-cloak class="card shadow-sm">
+    <div class="card-body border-bottom"><input data-filter="#payTable" placeholder="Filter supplier…" class="form-control form-control-sm" style="max-width:24rem"></div>
+    <div class="table-responsive">
+      <table id="payTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-4"><tr>
+          <th>Supplier</th><th>Phone</th><th class="text-end">Due</th><th></th></tr></thead>
+        <tbody>
+          {% for s in payables %}
+          <tr>
+            <td>{{ s.name }}</td>
+            <td class="text-secondary">{{ s.phone|default:"—" }}</td>
+            <td class="text-end text-warning fw-semibold">{{ s.due_balance }}</td>
+            <td class="text-end">
+              {% if is_owner or 'manage_purchasing' in perms_set %}
+              <button @click="pay = (pay==={{ s.id }} ? null : {{ s.id }})" class="btn btn-link btn-sm p-0">Pay</button>{% endif %}
+            </td>
+          </tr>
+          <tr x-show="pay==={{ s.id }}" x-cloak class="table-active">
+            <td colspan="4">
+              <form method="post" class="d-flex flex-wrap gap-2 align-items-end">{% csrf_token %}
+                <input type="hidden" name="action" value="pay_supplier">
+                <input type="hidden" name="supplier_id" value="{{ s.id }}">
+                <label class="small">Amount<input name="amount" type="number" step="0.01" max="{{ s.due_balance }}" required value="{{ s.due_balance }}" class="form-control form-control-sm" style="width:8rem"></label>
+                <label class="small">Method<select name="method" class="form-select form-select-sm">
+                  <option value="cash">Cash</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="bank">Bank</option></select></label>
+                <label class="small">Reference<input name="reference" placeholder="txn / cheque no" class="form-control form-control-sm" style="width:10rem"></label>
+                <button class="btn btn-brand btn-sm">Record payment</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="4" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">✅</div>
+            <div class="fw-semibold mt-2">Nothing owed</div>
+            <div class="small mb-3">You have no unpaid supplier balances.</div>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

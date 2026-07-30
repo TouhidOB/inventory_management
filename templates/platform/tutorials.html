@@ -1,0 +1,62 @@
+{% extends "platform/base.html" %}
+{% block title %}Tutorials{% endblock %}
+{% block heading %}Tutorial Videos{% endblock %}
+{% block content %}
+<div x-data="{ edit: null }" class="vstack gap-4">
+
+  <div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold mb-3">Add a tutorial video</div>
+    <form method="post" action="{% url 'platform:tutorials' %}" class="row g-2 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-4"><label class="small">Video title</label><input name="title" required class="form-control form-control-sm" placeholder="e.g. How to make your first sale"></div>
+      <div class="col-md-4"><label class="small">YouTube link</label><input name="youtube_url" required class="form-control form-control-sm" placeholder="https://youtu.be/…"></div>
+      <div class="col-md-2"><label class="small">Sequence #</label><input name="sequence" type="number" min="1" class="form-control form-control-sm" placeholder="auto"></div>
+      <div class="col-md-2 d-grid"><button class="btn btn-brand btn-sm">Add video</button></div>
+    </form>
+    <div class="form-text mt-1">Videos appear on every shop's dashboard, ordered by sequence number (lowest first).</div>
+  </div></div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-4"><tr>
+          <th style="width:5rem">Seq</th><th style="width:7rem">Preview</th><th>Title</th><th>Link</th>
+          <th class="text-center">Active</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for v in videos %}
+          <tr>
+            <td class="fw-semibold">{{ v.sequence }}</td>
+            <td>{% if v.thumbnail_url %}<a href="{{ v.youtube_url }}" target="_blank" rel="noopener"><img src="{{ v.thumbnail_url }}" alt="{{ v.title }} thumbnail" style="width:5.5rem;height:auto;border-radius:6px"></a>{% else %}—{% endif %}</td>
+            <td class="fw-medium">{{ v.title }}</td>
+            <td class="small text-secondary text-break" style="max-width:18rem">{{ v.youtube_url }}</td>
+            <td class="text-center">{% if v.is_active %}<span class="badge text-bg-success">On</span>{% else %}<span class="badge text-bg-secondary">Off</span>{% endif %}</td>
+            <td class="text-end text-nowrap">
+              <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-link btn-sm p-0" @click="edit = (edit==={{ v.id }} ? null : {{ v.id }})">Edit</button>
+                <form method="post" action="{% url 'platform:tutorial_delete' v.id %}">{% csrf_token %}<button type="button" data-confirm="Delete “{{ v.title|escapejs }}”?" class="btn btn-link btn-sm text-danger p-0">Delete</button></form>
+              </div>
+            </td>
+          </tr>
+          <tr x-show="edit==={{ v.id }}" x-cloak class="table-active">
+            <td colspan="6">
+              <form method="post" action="{% url 'platform:tutorial_edit' v.id %}" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-4"><label class="small">Title</label><input name="title" value="{{ v.title }}" required class="form-control form-control-sm"></div>
+                <div class="col-md-4"><label class="small">YouTube link</label><input name="youtube_url" value="{{ v.youtube_url }}" required class="form-control form-control-sm"></div>
+                <div class="col-md-1"><label class="small">Seq</label><input name="sequence" type="number" min="1" value="{{ v.sequence }}" class="form-control form-control-sm"></div>
+                <div class="col-md-2"><label class="small d-block">Active</label><input type="checkbox" name="is_active" {% if v.is_active %}checked{% endif %} class="form-check-input"></div>
+                <div class="col-md-1 d-grid"><button class="btn btn-brand btn-sm">Save</button></div>
+              </form>
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">🎬</div>
+            <div class="fw-semibold mt-2">No tutorials yet</div>
+            <div class="small">Add your first video above — it will show on every shop's dashboard.</div>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

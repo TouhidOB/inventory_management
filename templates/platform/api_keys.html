@@ -1,0 +1,57 @@
+{% extends "platform/base.html" %}
+{% block title %}API Keys{% endblock %}
+{% block heading %}Public API Keys{% endblock %}
+{% block content %}
+<div class="vstack gap-3">
+  {% if new_api_key %}
+  <div class="alert alert-success">
+    <div class="fw-semibold mb-2">New key for “{{ new_api_key_name }}” — copy it now, it won’t be shown again.</div>
+    <div class="input-group">
+      <input id="newKey" readonly value="{{ new_api_key }}" class="form-control font-monospace" onclick="this.select()">
+      <button type="button" class="btn btn-success"
+              onclick="const i=document.getElementById('newKey');i.select();navigator.clipboard.writeText(i.value).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+    </div>
+  </div>
+  {% endif %}
+  <div class="d-flex justify-content-end"><button onclick="document.getElementById('kf').classList.toggle('d-none')" class="btn btn-brand btn-sm">+ Issue key</button></div>
+  <div id="kf" class="d-none card shadow-sm"><div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-6"><select name="shop" required class="form-select form-select-sm"><option value="">Shop…</option>{% for s in shops %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><input name="name" placeholder="Key name" class="form-control form-control-sm"></div>
+      <div class="col-md-6 d-flex gap-4 align-items-center">
+        <label class="form-check-label small"><input type="checkbox" name="can_read" class="form-check-input me-1" checked> Read</label>
+        <label class="form-check-label small"><input type="checkbox" name="can_write" class="form-check-input me-1"> Write</label>
+      </div>
+      <div class="col-md-6 d-flex gap-3 flex-wrap align-items-center small">
+        {% for r in resource_options %}<label class="form-check-label"><input type="checkbox" name="resources" value="{{ r }}" class="form-check-input me-1" checked> {{ r }}</label>{% endfor %}
+      </div>
+      <div class="col-12"><button class="btn btn-brand btn-sm">Generate (shown once)</button></div>
+    </form>
+    <p class="small text-secondary mt-2 mb-0">Enterprise plan only — a key on a non-Enterprise shop is rejected at auth.</p>
+  </div></div>
+  <div class="card shadow-sm">
+    <div class="card-body border-bottom"><input data-filter="#keyTable" placeholder="Filter keys…" class="form-control form-control-sm" style="max-width:24rem"></div>
+    <div class="table-responsive">
+      <table id="keyTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-3"><tr><th>Name</th><th>Shop</th><th>Prefix</th><th>Scope</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+          {% for k in keys %}
+          <tr>
+            <td>{{ k.name }}</td><td>{{ k.shop.name }}</td>
+            <td class="font-monospace small">{{ k.prefix }}…</td>
+            <td class="small">{% if k.can_read %}R{% endif %}{% if k.can_write %}W{% endif %} · {{ k.resources|join:", " }}</td>
+            <td>{{ k.is_active|yesno:"Yes,Revoked" }}</td>
+            <td class="text-end text-nowrap">
+              <form method="post" action="{% url 'platform:api_key_regenerate' k.id %}" class="d-inline" onsubmit="return confirm('Regenerate this key? The old value stops working immediately.')">{% csrf_token %}<button class="btn btn-link btn-sm p-0 me-2">Regenerate</button></form>
+              {% if k.is_active %}<form method="post" action="{% url 'platform:api_key_revoke' k.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-link btn-sm text-danger p-0">Revoke</button></form>{% endif %}
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-4">No keys.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

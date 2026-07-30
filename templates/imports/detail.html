@@ -1,0 +1,32 @@
+{% extends "platform/base.html" %}
+{% block title %}Import job{% endblock %}
+{% block heading %}📥 Import job — {{ job.get_import_type_display }} → {{ job.shop.name }}{% endblock %}
+{% block content %}
+<div class="card card-body shadow-sm mb-3">
+  <div class="row g-3">
+    <div class="col-md-3"><div class="text-secondary small">Status</div><div class="fw-medium">{{ job.get_status_display }}</div></div>
+    <div class="col-md-2"><div class="text-secondary small">Total rows</div><div class="fw-medium">{{ job.total_rows }}</div></div>
+    <div class="col-md-2"><div class="text-secondary small">Created</div><div class="fw-medium text-success">{{ job.created_count }}</div></div>
+    <div class="col-md-2"><div class="text-secondary small">Updated</div><div class="fw-medium text-info">{{ job.updated_count }}</div></div>
+    <div class="col-md-3"><div class="text-secondary small">Committed at</div><div class="fw-medium">{{ job.committed_at|default:"—" }}</div></div>
+  </div>
+  {% if job.error_summary %}<div class="alert alert-danger mt-3 mb-0 small">{{ job.error_summary }}</div>{% endif %}
+  {% if job.notes %}<div class="alert alert-secondary mt-3 mb-0 small" style="white-space:pre-line">{{ job.notes }}</div>{% endif %}
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+  <a href="{% url 'imports:index' %}" class="btn btn-outline-secondary btn-sm">← All imports</a>
+  {% if job.status == 'preview_ready' %}
+    <a href="{% url 'imports:preview' job.id %}" class="btn btn-brand btn-sm">Go to preview →</a>
+  {% endif %}
+  {% if job.total_rows %}
+    <a href="{% url 'imports:report' job.id %}" class="btn btn-outline-secondary btn-sm">⬇ Download result report (CSV)</a>
+  {% endif %}
+  {% if job.status == 'committed' %}
+    <form method="post" action="{% url 'imports:rollback' job.id %}" onsubmit="return confirm('Roll back this import? Created rows are deleted, updated rows restored.')">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger btn-sm">↩ Roll back this import</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "web/base.html" %}
+{% block title %}Suppliers{% endblock %}
+{% block heading %}Suppliers{% endblock %}
+{% block content %}
+<div x-data="{add:false, edit:null}" class="vstack gap-3">
+  <div class="d-flex justify-content-end"><button @click="add=!add" class="btn btn-brand btn-sm">+ Add supplier</button></div>
+  <div x-show="add" x-cloak class="card shadow-sm"><div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-3"><input name="name" required placeholder="Contact name" class="form-control form-control-sm"></div>
+      <div class="col-md-3"><input name="company_name" placeholder="Company name" class="form-control form-control-sm"></div>
+      <div class="col-md-3"><input name="phone" placeholder="Phone" class="form-control form-control-sm"></div>
+      <div class="col-md-3"><input name="email" type="email" placeholder="Email" class="form-control form-control-sm"></div>
+      <div class="col-12"><button class="btn btn-brand btn-sm">Save</button></div>
+    </form>
+  </div></div>
+  <div class="card shadow-sm">
+    <div class="card-body border-bottom"><input data-filter="#supplierTable" placeholder="Filter suppliers…" class="form-control form-control-sm" style="max-width:24rem"></div>
+    <div class="table-responsive">
+      <table id="supplierTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-4"><tr><th>Contact</th><th>Company</th><th>Phone</th><th>Email</th><th class="text-end">Payable</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for s in suppliers %}
+          <tr>
+            <td>{{ s.name }}</td><td class="text-secondary">{{ s.company_name|default:"—" }}</td><td class="text-secondary">{{ s.phone }}</td><td class="text-secondary">{{ s.email }}</td>
+            <td class="text-end {% if s.due_balance > 0 %}text-danger{% endif %}">{{ s.due_balance }}</td>
+            <td class="text-end text-nowrap">
+              <button @click="edit = (edit==={{ s.id }} ? null : {{ s.id }})" class="btn btn-link btn-sm p-0 me-2">Edit</button>
+              <form method="post" class="d-inline">{% csrf_token %}
+                <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ s.id }}">
+                <button type="button" data-confirm="Delete supplier “{{ s.name|escapejs }}”?" class="btn btn-link btn-sm text-danger p-0">Delete</button></form>
+            </td>
+          </tr>
+          <tr x-show="edit==={{ s.id }}" x-cloak class="table-active">
+            <td colspan="6">
+              <form method="post" class="row g-2 align-items-end">{% csrf_token %}
+                <input type="hidden" name="action" value="edit"><input type="hidden" name="id" value="{{ s.id }}">
+                <div class="col-md-3"><label class="small">Contact name<input name="name" value="{{ s.name }}" required class="form-control form-control-sm"></label></div>
+                <div class="col-md-3"><label class="small">Company<input name="company_name" value="{{ s.company_name }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><label class="small">Phone<input name="phone" value="{{ s.phone }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><label class="small">Email<input name="email" type="email" value="{{ s.email }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><button class="btn btn-brand btn-sm">Save changes</button></div>
+              </form>
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">🚚</div>
+            <div class="fw-semibold mt-2">No suppliers yet</div>
+            <div class="small mb-3">Add a supplier to record purchases and track what you owe.</div>
+            <button @click="add=true" class="btn btn-brand btn-sm">+ Add supplier</button>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

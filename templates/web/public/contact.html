@@ -1,0 +1,27 @@
+{% extends "web/public/base.html" %}
+{% block title %}Contact · StockWhisk{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:44rem">
+  <h1 class="fw-bold">Contact us</h1>
+  <p class="text-secondary mt-2">Questions about StockWhisk for your shop? Reach out.</p>
+  <div class="mt-4 vstack gap-2">
+    <div>📧 Email: <a href="mailto:ob.touhid@gmail.com">ob.touhid@gmail.com</a></div>
+    <div>📞 Phone: <a href="tel:+8801613511887">+880 16 1351 1887</a></div>
+    <div>📍 Dhaka, Bangladesh</div>
+  </div>
+
+  <form method="post" class="card border mt-4"><div class="card-body">
+    {% csrf_token %}
+    <div class="fw-semibold mb-3">Send us a message</div>
+    <div class="row g-3">
+      <div class="col-md-6"><input name="name" required placeholder="Your name" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><input name="email" type="email" required placeholder="Your email" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><input name="phone" placeholder="Phone (optional)" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><input name="subject" placeholder="Subject (optional)" class="form-control form-control-sm"></div>
+      <div class="col-12"><textarea name="message" required rows="4" placeholder="How can we help?" class="form-control form-control-sm"></textarea></div>
+    </div>
+    <input type="text" name="website" class="d-none" tabindex="-1" autocomplete="off">
+    <button class="btn btn-brand btn-sm mt-3">Send message</button>
+  </div></form>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "web/base.html" %}
+{% block title %}Service tickets{% endblock %}
+{% block heading %}Service Tickets{% endblock %}
+{% block content %}
+<div x-data="{add:false}" class="vstack gap-3">
+  {% if is_owner or 'manage_service' in perms_set %}
+  <div class="d-flex justify-content-end"><button @click="add=!add" class="btn btn-brand btn-sm">+ New ticket</button></div>
+  <div x-show="add" x-cloak class="card shadow-sm"><div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-6"><input name="customer_name" placeholder="Customer name" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><input name="customer_phone" placeholder="Customer phone" class="form-control form-control-sm"></div>
+      <div class="col-12"><select name="customer" class="form-select form-select-sm"><option value="">Link existing customer (optional)…</option>{% for c in customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><input name="device_description" required placeholder="Device" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><input name="service_charge" type="number" step="0.01" placeholder="Service charge" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><select name="device_type" class="form-select form-select-sm">{% for v,label in device_types %}<option value="{{ v }}">{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><select name="issue_type" class="form-select form-select-sm">{% for v,label in issue_types %}<option value="{{ v }}">{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="small">Under warranty? <span class="text-secondary">(optional)</span></label>
+        <select name="warranty" class="form-select form-select-sm"><option value="">No warranty claim</option>{% for w in warranties %}<option value="{{ w.id }}">{{ w.product.name }}{% if w.serial_no %} · {{ w.serial_no }}{% endif %} · exp {{ w.expiry_date }}</option>{% endfor %}</select></div>
+      <div class="col-12"><textarea name="complaint" placeholder="Complaint / issue" class="form-control form-control-sm"></textarea></div>
+      <div class="col-12"><label class="small w-100">Expected delivery date
+        <input name="estimated_delivery" type="date" class="form-control form-control-sm mt-1"></label></div>
+      <div class="col-12 small text-secondary">Received time is recorded automatically.</div>
+      <div class="col-12"><button class="btn btn-brand btn-sm">Create</button></div>
+    </form>
+  </div></div>
+  {% endif %}
+  <div class="card shadow-sm">
+    <div class="card-body border-bottom"><input data-filter="#ticketTable" placeholder="Filter tickets/devices…" class="form-control form-control-sm" style="max-width:24rem"></div>
+    <div class="table-responsive">
+      <table id="ticketTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-6"><tr>
+          <th style="width:9rem">Ticket</th><th>Device</th><th style="width:11rem">Customer</th>
+          <th style="width:6.5rem">Received</th><th style="width:6.5rem">Expected</th>
+          <th style="width:7rem">Status</th><th class="text-end" style="width:15rem">Actions</th></tr></thead>
+        <tbody>
+          {% for t in tickets %}
+          <tr class="{% if t.is_overdue %}table-danger{% endif %}">
+            <td>
+              <div class="fw-medium">{{ t.ticket_no }}</div>
+              {% if t.warranty_id %}<span class="badge text-bg-info">🛡 warranty</span>{% endif %}
+            </td>
+            <td>{{ t.device_description }}</td>
+            <td>{{ t.customer.name|default:t.customer_name|default:"—" }}<div class="small text-secondary">{{ t.customer.phone|default:t.customer_phone }}</div></td>
+            <td class="text-secondary small text-nowrap">{{ t.received_at|date:"M d, H:i" }}</td>
+            <td class="small text-nowrap {% if t.is_overdue %}text-danger fw-semibold{% endif %}">{{ t.estimated_delivery|default:"—" }}</td>
+            <td><span class="badge text-bg-secondary">{{ t.get_status_display }}</span></td>
+            <td>
+              <div class="d-flex gap-2 justify-content-end align-items-center flex-nowrap">
+              {% if is_owner or 'manage_service' in perms_set %}
+              <form method="post" action="{% url 'web:ticket_status' t.id %}" class="input-group input-group-sm" style="width:11rem">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm">{% for v,l in statuses %}<option value="{{ v }}" {% if v == t.status %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+                <button class="btn btn-outline-brand btn-sm">Set</button>
+              </form>{% endif %}
+              <a href="{% url 'web:ticket_invoice' t.id %}" target="_blank" class="btn btn-link btn-sm p-0 text-nowrap">Invoice</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="7" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">🔧</div>
+            <div class="fw-semibold mt-2">No service tickets yet</div>
+            <div class="small mb-3">Log a repair or service job to track it through to completion.</div>
+            <button @click="add=true" class="btn btn-brand btn-sm">+ New ticket</button>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

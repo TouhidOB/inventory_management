@@ -1,0 +1,125 @@
+{% extends "web/public/base.html" %}
+{% block content %}
+<!-- Hero -->
+<section class="bg-brand text-white text-center">
+  <div class="container py-5" style="max-width:60rem">
+    <span class="badge rounded-pill text-uppercase" style="background:var(--brand-700)">Retail operating system</span>
+    <h1 class="mt-4 display-5 fw-bold">Run your entire shop<br>from one dashboard</h1>
+    <p class="mt-4 text-white-50 mx-auto" style="max-width:42rem">POS, inventory, purchasing, customers, dues, service tickets, accounting and analytics — built for electronics, mobile, computer and general retail shops in Bangladesh.</p>
+    <div class="mt-4 d-flex flex-wrap justify-content-center gap-3">
+      <a href="{% url 'web:signup' %}" class="btn btn-brand-light btn-lg fw-semibold">Request access</a>
+      <a href="{% url 'web:features' %}" class="btn btn-outline-light btn-lg">See features</a>
+    </div>
+    <p class="mt-3 small text-white-50">Accounts are set up by our team — no credit card, no setup fees.</p>
+  </div>
+</section>
+
+<!-- Stats band -->
+<section class="border-top border-bottom" style="background:var(--brand-50)">
+  <div class="container py-4">
+    <div class="row text-center g-4">
+      <div class="col-6 col-md-3"><div class="fs-3 fw-bold text-brand">1</div><div class="small text-secondary">unified platform</div></div>
+      <div class="col-6 col-md-3"><div class="fs-3 fw-bold text-brand">10+</div><div class="small text-secondary">connected modules</div></div>
+      <div class="col-6 col-md-3"><div class="fs-3 fw-bold text-brand">100%</div><div class="small text-secondary">audit-ready stock ledger</div></div>
+      <div class="col-6 col-md-3"><div class="fs-3 fw-bold text-brand">0</div><div class="small text-secondary">hidden charges</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="container py-5">
+  <div class="text-center mx-auto" style="max-width:42rem">
+    <h2 class="fw-bold">Everything your shop needs, connected</h2>
+    <p class="text-secondary mt-2">No more juggling notebooks, spreadsheets and separate apps. Every sale, purchase and repair updates the same source of truth.</p>
+  </div>
+  <div class="row g-4 mt-3">
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">🛒</div><h3 class="h6 fw-semibold mt-2">Fast POS</h3><p class="small text-secondary mt-1">Barcode checkout in seconds, blocks out-of-stock sales, per-customer discounts, instant invoice printing.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">📦</div><h3 class="h6 fw-semibold mt-2">Live inventory ledger</h3><p class="small text-secondary mt-1">Append-only stock movements, restock with weighted-average cost, low-stock alerts you can trust.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">🧮</div><h3 class="h6 fw-semibold mt-2">Transparent accounting</h3><p class="small text-secondary mt-1">Real profit = revenue − COGS − expenses. Daily, weekly, monthly and yearly views.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">🛠️</div><h3 class="h6 fw-semibold mt-2">Service & warranty</h3><p class="small text-secondary mt-1">Repair tickets, technician workload, warranty tracking, printable service invoices.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">📈</div><h3 class="h6 fw-semibold mt-2">Analytics & reports</h3><p class="small text-secondary mt-1">Dead-stock detection, top products, sales & repair reports, CSV / Excel / PDF exports.</p></div></div></div>
+    <div class="col-md-4"><div class="card h-100 border"><div class="card-body"><div class="fs-3">💰</div><h3 class="h6 fw-semibold mt-2">Dues & custom roles</h3><p class="small text-secondary mt-1">Track customer & supplier dues, collect payments, define your own staff roles & permissions.</p></div></div></div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section style="background:var(--brand-50)">
+  <div class="container py-5">
+    <h2 class="fw-bold text-center">Up and running in three steps</h2>
+    <div class="row g-4 mt-3">
+      <div class="col-md-4"><div class="card border h-100"><div class="card-body">
+        <div class="rounded-circle btn-brand d-flex align-items-center justify-content-center fw-bold" style="width:2.25rem;height:2.25rem">1</div>
+        <h3 class="h6 fw-semibold mt-3">Request access</h3>
+        <p class="small text-secondary mt-1">Tell us about your shop. Our team reviews and provisions your account with the right setup.</p>
+      </div></div></div>
+      <div class="col-md-4"><div class="card border h-100"><div class="card-body">
+        <div class="rounded-circle btn-brand d-flex align-items-center justify-content-center fw-bold" style="width:2.25rem;height:2.25rem">2</div>
+        <h3 class="h6 fw-semibold mt-3">Add products & staff</h3>
+        <p class="small text-secondary mt-1">Import your catalog, set reorder levels, create custom roles for your team in minutes.</p>
+      </div></div></div>
+      <div class="col-md-4"><div class="card border h-100"><div class="card-body">
+        <div class="rounded-circle btn-brand d-flex align-items-center justify-content-center fw-bold" style="width:2.25rem;height:2.25rem">3</div>
+        <h3 class="h6 fw-semibold mt-3">Sell & grow</h3>
+        <p class="small text-secondary mt-1">Ring up sales at the POS while inventory, dues and accounts update automatically.</p>
+      </div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Who it's for -->
+<section class="container py-5">
+  <div class="text-center mx-auto" style="max-width:42rem">
+    <h2 class="fw-bold">Built for shops like yours</h2>
+    <p class="text-secondary mt-2">Whether you sell, repair or both — StockWhisk adapts to how you work.</p>
+  </div>
+  <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+    <span class="badge rounded-pill text-bg-light border fs-6 fw-normal">📱 Mobile shops</span>
+    <span class="badge rounded-pill text-bg-light border fs-6 fw-normal">💻 Computer & laptop stores</span>
+    <span class="badge rounded-pill text-bg-light border fs-6 fw-normal">🔌 Electronics retailers</span>
+    <span class="badge rounded-pill text-bg-light border fs-6 fw-normal">🛠️ Repair & service centers</span>
+    <span class="badge rounded-pill text-bg-light border fs-6 fw-normal">🏪 General retail</span>
+  </div>
+</section>
+
+<!-- Pricing preview -->
+<section class="bg-brand text-white text-center">
+  <div class="container py-5">
+    <h2 class="fw-bold">One simple plan. Everything included.</h2>
+    <p class="text-white-50 mt-2">No tiers, no feature gates, no surprises.</p>
+    {% for p in plans %}
+    <div class="card text-start shadow-lg mx-auto mt-4" style="max-width:24rem"><div class="card-body p-4">
+      <div class="fw-semibold fs-5">{{ p.name }}</div>
+      <div class="mt-2"><span class="display-6 fw-bold">৳{{ p.price_monthly }}</span><span class="text-secondary">/mo</span></div>
+      <div class="small text-secondary">or ৳{{ p.price_yearly }}/year</div>
+      <ul class="list-unstyled small mt-3 text-secondary vstack gap-1">
+        <li>✓ Every module included</li>
+        <li>✓ {{ p.max_users }} staff accounts</li>
+        <li>✓ Unlimited sales & invoices</li>
+        <li>✓ Manual bKash / Nagad / bank billing</li>
+      </ul>
+      <a href="{% url 'web:pricing' %}" class="btn btn-brand w-100 mt-3">See full pricing</a>
+    </div></div>
+    {% empty %}<div class="mt-4 text-white-50">Pricing coming soon.</div>{% endfor %}
+  </div>
+</section>
+
+<!-- Testimonial -->
+<section class="container py-5 text-center" style="max-width:48rem">
+  <div class="display-4 text-brand">“</div>
+  <p class="fs-5 fw-medium">One dashboard replaced our register book, stock diary and separate accounts file. We finally know our real profit at the end of every day.</p>
+  <div class="mt-3 small text-secondary">— A StockWhisk retailer</div>
+</section>
+
+<!-- FAQ -->
+<section style="background:var(--brand-50)">
+  <div class="container py-5" style="max-width:48rem">
+    <h2 class="fw-bold text-center mb-4">Frequently asked questions</h2>
+    <div class="accordion" id="faq">
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f1">How do I get an account?</button></h2><div id="f1" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body small text-secondary">Submit an access request and our team provisions your shop. Accounts aren’t self-service — this keeps every shop verified and set up correctly.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">How does billing work?</button></h2><div id="f2" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body small text-secondary">Pay monthly or yearly via bKash, Nagad or bank transfer. Payments are confirmed manually — you’re never auto-charged.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Can my staff have limited access?</button></h2><div id="f3" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body small text-secondary">Yes. Create custom roles with exactly the permissions each employee needs — cashier, technician, accountant or your own.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4">Is my data safe and separated?</button></h2><div id="f4" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body small text-secondary">Every shop’s data is fully isolated. Staff only ever see their own shop.</div></div></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

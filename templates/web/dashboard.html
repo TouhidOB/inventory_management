@@ -1,0 +1,83 @@
+{% extends "web/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+{% if tutorials %}
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <span class="fw-semibold"><i class="bi bi-play-btn text-brand"></i> Video tutorials</span>
+    <a href="{% url 'web:tutorials' %}" class="small text-decoration-none">See all →</a>
+  </div>
+  <div class="d-flex gap-3 overflow-auto pb-1">
+    {% for v in tutorials %}
+    <a href="{% url 'web:tutorials' %}" class="text-decoration-none text-body flex-shrink-0" style="width:11rem">
+      <div class="position-relative">
+        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" class="w-100 rounded" style="aspect-ratio:16/9;object-fit:cover">{% endif %}
+        <span class="position-absolute top-50 start-50 translate-middle text-white fs-3"><i class="bi bi-play-circle-fill"></i></span>
+      </div>
+      <div class="small fw-medium mt-1 text-truncate">{{ v.sequence }}. {{ v.title }}</div>
+    </a>
+    {% endfor %}
+  </div>
+</div></div>
+{% endif %}
+{% if summary %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <div class="small text-secondary">Today revenue</div>
+      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.today.revenue }}</div>
+    </div></div>
+  </div>
+  {% if can_profit %}
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <div class="small text-secondary">Today net profit</div>
+      <div class="fs-4 fw-bold text-success">{{ current_shop.currency }} {{ summary.today.net_profit }}</div>
+    </div></div>
+  </div>
+  {% endif %}
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <div class="small text-secondary">Stock value</div>
+      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.stock_value }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <div class="small text-secondary">Out / Low stock</div>
+      <div class="fs-4 fw-bold text-danger">{{ summary.out_of_stock_count }} / {{ summary.low_stock_count }}</div>
+    </div></div>
+  </div>
+</div>
+
+{% if charts %}{% include "web/_analytics_charts.html" %}{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-3">Financial position</div>
+      <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+        <thead class="thead-3"><tr><th>Account</th><th class="text-end">Amount</th></tr></thead>
+        <tr><td class="text-secondary">Cash</td><td class="text-end">{{ summary.position.cash_balance }}</td></tr>
+        <tr><td class="text-secondary">Receivables</td><td class="text-end">{{ summary.position.receivables }}</td></tr>
+        <tr><td class="text-secondary">Payables</td><td class="text-end">{{ summary.position.payables }}</td></tr>
+      </table></div>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-3">Out of stock</div>
+      <div class="table-responsive"><table class="table table-striped table-sm mb-0">
+        {% for p in low_stock %}<tr><td>{{ p.name }}</td><td class="text-end text-danger">{{ p.current_stock }}</td></tr>
+        {% empty %}<tr><td class="text-secondary">All good.</td></tr>{% endfor %}
+      </table></div>
+    </div></div>
+  </div>
+</div>
+{% else %}
+<div class="card shadow-sm"><div class="card-body text-secondary">
+  Welcome to <b>{{ current_shop.name }}</b>. Use the sidebar to work in POS, sales, and inventory.
+</div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4;margin:0}
+  html,body{font-family:'Inter',system-ui,sans-serif;color:#0C2A45;background:#EEF2F6}
+  .page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;display:flex;flex-direction:column}
+  .hero{background:#0C447C;color:#fff;padding:14px 32px 13px}
+  .brandrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .logo{width:42px;height:42px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;color:#0C447C;font-weight:800;font-size:22px}
+  .wordmark{font-weight:800;font-size:25px;letter-spacing:-.02em}
+  .badge{font-size:12px;background:#185FA5;padding:6px 13px;border-radius:22px;font-weight:500}
+  h1{font-weight:800;font-size:28px;line-height:1.1;letter-spacing:-.025em}
+  .sub{font-weight:600;font-size:18px;color:#B5D4F4;margin-top:7px}
+  .lede{font-size:14px;color:#DCEAF9;margin-top:9px;line-height:1.55;max-width:90%}
+  .lede b{color:#fff}
+  .statwrap{display:flex;gap:12px;margin-top:11px}
+  .stat{flex:1;background:#185FA5;border-radius:12px;padding:9px 13px}
+  .stat .k{font-size:12px;color:#B5D4F4}
+  .stat .v{font-weight:800;font-size:21px;margin-top:2px}
+  .bars{height:24px;display:flex;align-items:flex-end;gap:4px;margin-top:9px}
+  .bars span{flex:1;border-radius:2px;background:#5FA0E0}
+  .bars .g{background:#7FE0B0}
+  .trust{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;background:#EAF3DE;padding:6px;font-size:12.5px;color:#3B6D11;font-weight:600}
+  .body{padding:11px 32px 3px}
+  .stitle{font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .ssub{font-size:13px;color:#5A6B78;margin:2px 0 9px}
+  .fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .feat{border:1px solid #E7EDF2;border-radius:11px;padding:9px 10px}
+  .feat .ic{width:34px;height:34px;border-radius:9px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;color:#1565C0;font-size:18px;font-weight:800}
+  .feat .fn{font-weight:600;font-size:13.5px;margin-top:5px}
+  .feat .fd{font-size:11.5px;color:#5A6B78;margin-top:1px}
+  .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+  .ben{font-size:14px;display:flex;align-items:center;gap:9px}
+  .chk{color:#639922;font-weight:800}
+  .offer{margin:9px 32px;background:#FFF1E6;border:2px dashed #EA6A1E;border-radius:12px;padding:9px 18px;display:flex;align-items:center;gap:15px}
+  .offer .gi{font-size:26px}
+  .offer .ot{font-weight:800;font-size:16px;color:#B4470E}
+  .offer .od{font-size:12.5px;color:#7A3B10;margin-top:2px}
+  .offer .od b{color:#B4470E}
+  .pricewrap{padding:2px 32px 2px;text-align:center}
+  .pcard{max-width:360px;margin:9px auto 0;border:2px solid #EA6A1E;border-radius:15px;padding:12px 24px 13px;position:relative}
+  .ptag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#EA6A1E;color:#fff;font-size:11px;font-weight:700;padding:4px 15px;border-radius:22px}
+  .pname{font-weight:600;font-size:14px;color:#0C447C}
+  .price{font-weight:800;font-size:35px;letter-spacing:-.03em;margin:2px 0 0}
+  .price .old{font-size:24px;color:#98A4AE;font-weight:600;text-decoration:line-through;text-decoration-color:#EA6A1E;text-decoration-thickness:2px;margin-right:6px}
+  .price .new{color:#0C447C}
+  .price small{font-size:15px;color:#5A6B78;font-weight:500}
+  .pnote{font-size:12px;color:#5A6B78;margin-top:1px}
+  .pnote .save{background:#EAF3DE;color:#3B6D11;font-weight:700;padding:2px 8px;border-radius:6px}
+  .plist{list-style:none;margin:9px 0 0;text-align:left;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
+  .plist li{font-size:12px;display:flex;align-items:center;gap:7px}
+  .plist li .c{color:#639922;font-weight:800}
+  .cta{margin-top:8px;background:#0C447C;color:#fff;padding:11px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .cta .ch{font-weight:800;font-size:21px}
+  .cta .cd{font-size:13px;color:#B5D4F4;margin-top:3px}
+  .callbtn{display:inline-block;background:#EA6A1E;color:#fff;font-weight:800;font-size:16px;padding:13px 20px;border-radius:11px;text-decoration:none}
+  .cmeta{font-size:12px;color:#B5D4F4;margin-top:8px;text-align:right}
+  .qr{width:74px;height:74px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#0C447C;font-size:52px}
+  .foot{padding:5px 32px;display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:#5A6B78}
+  .foot .soc{display:flex;gap:14px;font-size:17px;color:#0C447C}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div class="brandrow">
+      <div class="brand"><div class="logo">S</div><div class="wordmark">StockWhisk</div></div>
+      <span class="badge">Business Management Software</span>
+    </div>
+    <h1>Your whole shop.<br>One smart screen.</h1>
+    <div class="sub">Run sales, stock, dues &amp; profit — all calculated <b style="color:#fff">automatically</b>.</div>
+    <div class="statwrap">
+      <div class="stat"><div class="k">Today's sales</div><div class="v">৳ 84,250</div>
+        <div class="bars"><span style="height:40%"></span><span style="height:65%"></span><span style="height:50%"></span><span class="g" style="height:85%"></span><span style="height:70%"></span><span class="g" style="height:100%"></span></div>
+      </div>
+      <div class="stat"><div class="k">Today's profit</div><div class="v" style="color:#B7F0CE">৳ 21,700</div>
+        <div style="margin-top:9px;font-size:12px;color:#DCEAF9">▲ 12% vs yesterday</div>
+        <div style="margin-top:4px;font-size:12px;color:#DCEAF9">⚠ 3 items low on stock</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="trust">
+    <span>✓ 100% Secure</span><span>✓ Cloud Backup</span><span>✓ Barcode Ready</span><span>✓ Mobile Friendly</span>
+  </div>
+
+  <div class="body">
+    <div class="stitle">Everything your business needs</div>
+    <div class="ssub">One platform — nothing else to buy or install.</div>
+    <div class="fgrid">
+      <div class="feat"><div class="ic">▦</div><div class="fn">Inventory</div><div class="fd">Live stock control</div></div>
+      <div class="feat"><div class="ic">₸</div><div class="fn">POS Billing</div><div class="fd">Fast checkout</div></div>
+      <div class="feat"><div class="ic">▤</div><div class="fn">Invoicing</div><div class="fd">Branded invoices</div></div>
+      <div class="feat"><div class="ic">◈</div><div class="fn">Due Tracking</div><div class="fd">Know who owes you</div></div>
+      <div class="feat"><div class="ic">◎</div><div class="fn">Customers</div><div class="fd">Full directory</div></div>
+      <div class="feat"><div class="ic">⛟</div><div class="fn">Suppliers</div><div class="fd">Payables tracked</div></div>
+      <div class="feat"><div class="ic">▥</div><div class="fn">Profit Analytics</div><div class="fd">Real margins</div></div>
+      <div class="feat"><div class="ic">‖</div><div class="fn">Barcode</div><div class="fd">Scan &amp; sell</div></div>
+    </div>
+
+    <div class="bgrid">
+      <div class="ben"><span class="chk">✓</span> Know your real profit every single day</div>
+      <div class="ben"><span class="chk">✓</span> Get alerts before stock runs out</div>
+      <div class="ben"><span class="chk">✓</span> Cut manual errors, save hours daily</div>
+      <div class="ben"><span class="chk">✓</span> Monitor your shop from anywhere</div>
+    </div>
+  </div>
+
+  <div class="offer">
+    <div class="gi">🎁</div>
+    <div>
+      <div class="ot">Limited-time launch offer</div>
+      <div class="od">Free demo · Free setup · Free training — <b>get started at no risk.</b></div>
+    </div>
+  </div>
+
+  <div class="pricewrap">
+    <div class="stitle">Simple, honest pricing</div>
+    <div class="ssub">One plan. Every feature. No hidden fees.</div>
+    <div class="pcard">
+      <div class="ptag">ALL FEATURES INCLUDED</div>
+      <div class="pname">StockWhisk Business</div>
+      <div class="price"><span class="old">৳799</span> <span class="new">৳499</span><small> / month</small></div>
+      <div class="pnote"><span class="save">Save ৳300</span> — limited-time launch price. No per-transaction charge.</div>
+      <ul class="plist">
+        <li><span class="c">✓</span> POS &amp; Billing</li><li><span class="c">✓</span> Inventory &amp; Stock</li>
+        <li><span class="c">✓</span> Purchases &amp; Suppliers</li><li><span class="c">✓</span> Due Management</li>
+        <li><span class="c">✓</span> Profit &amp; Reports</li><li><span class="c">✓</span> Multi-user &amp; Roles</li>
+        <li><span class="c">✓</span> Barcode &amp; Alerts</li><li><span class="c">✓</span> Cloud Backup</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <div class="ch">Book your free demo today</div>
+      <div class="cd">5-minute setup · nothing to install</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="text-align:right">
+        <a class="callbtn" href="tel:+8801613511887">☎ 01613-511887</a>
+        <div class="cmeta">WhatsApp · www.stockwhisk.app</div>
+      </div>
+      <div class="qr">▣</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="soc"><span>f</span><span>◉</span><span>▶</span><span>✉</span></div>
+    <div>StockWhisk — business you can trust, numbers you can bank on.</div>
+  </div>
+</div>
+</body>
+</html>

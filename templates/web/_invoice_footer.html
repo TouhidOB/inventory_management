@@ -1,0 +1,13 @@
+{% comment %}Shared invoice footer. Params: shop. Shows the shop's configured
+invoice footer note + return policy (Settings → Invoice), then a contact line.{% endcomment %}
+<footer class="text-center small text-secondary" style="overflow-wrap:anywhere">
+  {% if shop.invoice_settings.footer_note %}
+    <div class="mb-1" style="white-space:pre-line">{{ shop.invoice_settings.footer_note }}</div>
+  {% endif %}
+  {% if shop.invoice_settings.return_policy %}
+    <div class="mb-1 fst-italic" style="white-space:pre-line">{{ shop.invoice_settings.return_policy }}</div>
+  {% endif %}
+  <div class="pt-2 mt-1" style="border-top:1px solid #1B3C53">
+    {{ shop.name }}{% if shop.phone %} · {{ shop.phone }}{% endif %}{% if shop.email %} · {{ shop.email }}{% endif %}
+  </div>
+</footer>

@@ -1,0 +1,45 @@
+{% extends "web/base.html" %}
+{% block title %}Selling details{% endblock %}
+{% block heading %}Selling Details{% endblock %}
+{% block content %}
+<div class="vstack gap-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <input data-filter="#detailTable" placeholder="Filter product / customer / invoice…" class="form-control form-control-sm" style="max-width:20rem">
+    <form method="get" class="d-flex align-items-center gap-2 small">
+      <label>Period</label>
+      <select name="days" onchange="this.form.submit()" class="form-select form-select-sm w-auto">
+        <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+        <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+        <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+        <option value="365" {% if days == 365 %}selected{% endif %}>Last year</option>
+      </select>
+    </form>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table id="detailTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-4"><tr>
+          <th>Date</th><th>Invoice</th><th>Product</th>
+          <th class="text-end">Qty</th><th class="text-end">Unit price</th><th class="text-end">Line total</th>
+          <th>Customer</th><th>Phone</th></tr></thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td class="text-secondary small text-nowrap">{{ it.sale.sale_date|date:"M d, Y H:i" }}</td>
+            <td><a href="{% url 'web:sale_detail' it.sale.id %}">{{ it.sale.invoice_no }}</a></td>
+            <td>{{ it.product.name }}{% if it.variation %} <span class="small text-secondary">({{ it.variation.name }})</span>{% endif %}</td>
+            <td class="text-end">{{ it.quantity }}</td>
+            <td class="text-end">{{ it.unit_price }}</td>
+            <td class="text-end">{{ it.subtotal }}</td>
+            <td>{{ it.sale.bill_name }}</td>
+            <td class="text-secondary">{{ it.sale.bill_phone|default:"—" }}</td>
+          </tr>
+          {% empty %}<tr data-empty><td colspan="8" class="text-center text-secondary py-4">No sales in this period.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

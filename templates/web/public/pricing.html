@@ -1,0 +1,80 @@
+{% extends "web/public/base.html" %}
+{% block title %}Pricing · StockWhisk{% endblock %}
+{% block content %}
+<section class="bg-brand text-white text-center">
+  <div class="container py-5">
+    <h1 class="fw-bold">Simple, honest pricing</h1>
+    <p class="text-white-50 mt-3 mx-auto" style="max-width:42rem">One plan with every feature included. Pay monthly or yearly via bKash, Nagad or bank — confirmed manually, never auto-charged.</p>
+  </div>
+</section>
+
+<div class="container py-5" style="max-width:64rem">
+  <div class="row g-4 align-items-start">
+    <!-- Plan card -->
+    <div class="col-lg-6">
+      {% for p in plans %}
+      <div class="card border shadow-sm"><div class="card-body p-4">
+        <div class="d-flex align-items-baseline justify-content-between">
+          <div class="fw-semibold fs-5">{{ p.name }}</div>
+          <span class="badge text-bg-secondary">All-inclusive</span>
+        </div>
+        <div class="mt-3"><span class="display-5 fw-bold">৳{{ p.price_monthly }}</span><span class="text-secondary">/month</span></div>
+        <div class="small text-secondary mt-1">or ৳{{ p.price_yearly }} per year — save with annual billing</div>
+        <a href="{% url 'web:signup' %}" class="btn btn-brand w-100 mt-3">Request access</a>
+        <div class="row g-3 mt-2 small text-secondary">
+          <div class="col-6">👤 {{ p.max_users }} staff accounts</div>
+          <div class="col-6">📦 {{ p.max_products }} products</div>
+          <div class="col-6">🧾 Unlimited invoices</div>
+          <div class="col-6">🔐 Custom roles</div>
+        </div>
+      </div></div>
+      {% empty %}
+      <div class="card border"><div class="card-body text-secondary">Pricing is being finalized. <a href="{% url 'web:contact' %}">Contact us</a> for details.</div></div>
+      {% endfor %}
+    </div>
+
+    <!-- What's included -->
+    <div class="col-lg-6">
+      <div class="rounded-3 p-4" style="background:var(--brand-50)">
+        <h2 class="h5 fw-semibold">Everything is included</h2>
+        <p class="small text-secondary mt-1">No feature gates. Every shop gets the full platform.</p>
+        <ul class="row g-2 small mt-2 list-unstyled">
+          <li class="col-sm-6">✓ Point of sale & invoicing</li>
+          <li class="col-sm-6">✓ Inventory ledger & restocking</li>
+          <li class="col-sm-6">✓ Purchasing & suppliers</li>
+          <li class="col-sm-6">✓ Customers (CRM)</li>
+          <li class="col-sm-6">✓ Dues & payment collection</li>
+          <li class="col-sm-6">✓ Service tickets & warranty</li>
+          <li class="col-sm-6">✓ Accounting & cash flow</li>
+          <li class="col-sm-6">✓ Analytics & repair reports</li>
+          <li class="col-sm-6">✓ CSV / Excel / PDF exports</li>
+          <li class="col-sm-6">✓ Custom staff roles</li>
+          <li class="col-sm-6">✓ Low-stock alerts</li>
+          <li class="col-sm-6">✓ Printable invoices & receipts</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing note -->
+  <div class="row g-3 mt-4">
+    <div class="col-md-4"><div class="card border h-100"><div class="card-body small"><div class="fw-semibold">💳 Pay your way</div><p class="text-secondary mt-1 mb-0">bKash, Nagad or bank transfer. Submit proof; we confirm it manually.</p></div></div></div>
+    <div class="col-md-4"><div class="card border h-100"><div class="card-body small"><div class="fw-semibold">🔒 Never auto-charged</div><p class="text-secondary mt-1 mb-0">No card on file. You’re always in control of renewals.</p></div></div></div>
+    <div class="col-md-4"><div class="card border h-100"><div class="card-body small"><div class="fw-semibold">🤝 Set up for you</div><p class="text-secondary mt-1 mb-0">Our team provisions your account and helps you get started.</p></div></div></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="mt-5 mx-auto" style="max-width:48rem">
+    <h2 class="fw-bold text-center mb-4">Pricing FAQ</h2>
+    <div class="accordion" id="pfaq">
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pf1">Is there a free trial?</button></h2><div id="pf1" class="accordion-collapse collapse" data-bs-parent="#pfaq"><div class="accordion-body small text-secondary">Request access and talk to our team — we’ll help you evaluate StockWhisk for your shop.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pf2">What happens if I miss a payment?</button></h2><div id="pf2" class="accordion-collapse collapse" data-bs-parent="#pfaq"><div class="accordion-body small text-secondary">Your account moves to a grace period with reminders before any interruption. No data is lost.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pf3">Can I switch between monthly and yearly?</button></h2><div id="pf3" class="accordion-collapse collapse" data-bs-parent="#pfaq"><div class="accordion-body small text-secondary">Yes. Yearly billing is discounted; contact us to change your cycle anytime.</div></div></div>
+      <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pf4">Are there setup or hidden fees?</button></h2><div id="pf4" class="accordion-collapse collapse" data-bs-parent="#pfaq"><div class="accordion-body small text-secondary">None. The monthly price is all you pay.</div></div></div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'web:signup' %}" class="btn btn-brand btn-lg">Request access</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4;margin:18mm 16mm}
+  html,body{font-family:'Inter',system-ui,sans-serif;color:#1c2b36;font-size:11pt;line-height:1.55}
+  h1,h2,h3{letter-spacing:-.01em;color:#0C447C}
+  .sec{margin-top:20px}
+  .sec h2{font-size:15pt;font-weight:800;border-bottom:2px solid #E6F1FB;padding-bottom:5px;margin-bottom:9px}
+  .sec h2 .n{color:#EA6A1E;margin-right:8px}
+  p{margin:0 0 8px}
+  ul{margin:0 0 8px 18px}li{margin:2px 0}
+  .muted{color:#5A6B78}
+  strong{color:#0C2A45}
+  table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:10pt}
+  th,td{border:1px solid #E2E8EF;padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#F3F7FC;color:#0C447C;font-weight:700}
+  .avoid{page-break-inside:avoid}
+  /* Cover */
+  .cover{height:257mm;display:flex;flex-direction:column;justify-content:center;background:#0C447C;color:#fff;margin:-18mm -16mm 0;padding:0 22mm;page-break-after:always}
+  .cover .logo{display:flex;align-items:center;gap:13px;margin-bottom:34px}
+  .cover .logo .m{width:52px;height:52px;border-radius:13px;background:#fff;color:#0C447C;font-weight:800;font-size:28px;display:flex;align-items:center;justify-content:center}
+  .cover .logo .w{font-weight:800;font-size:30px}
+  .cover h1{color:#fff;font-size:40px;line-height:1.12;font-weight:800;letter-spacing:-.025em}
+  .cover .tag{color:#B5D4F4;font-size:18px;margin-top:14px;font-weight:500}
+  .cover .rule{width:70px;height:5px;background:#EA6A1E;border-radius:3px;margin:26px 0}
+  .cover .meta{color:#DCEAF9;font-size:13px;line-height:1.9;margin-top:8px}
+  .cover .foot{margin-top:auto;padding-bottom:6mm;color:#9Fc2e6;font-size:12px}
+  .lead{font-size:12.5pt;color:#0C447C;font-weight:600;margin-bottom:10px}
+  .quote{border-left:4px solid #EA6A1E;background:#FFF7F1;padding:12px 16px;border-radius:0 8px 8px 0;font-style:italic;color:#3d2a1c;margin:8px 0}
+  .price-badge{display:inline-block;background:#EA6A1E;color:#fff;font-weight:800;padding:6px 14px;border-radius:8px;font-size:13pt}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cta-box{background:#EAF3DE;border-radius:12px;padding:16px 20px;margin-top:8px}
+  .cta-box h3{color:#3B6D11;font-size:14pt;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="logo"><div class="m">S</div><div class="w">StockWhisk</div></div>
+  <h1>The operating system<br>for modern retail.</h1>
+  <div class="tag">Inventory · Point of Sale · Accounting · Analytics — unified.</div>
+  <div class="rule"></div>
+  <div class="meta">Company Prospectus &amp; Business Profile<br>Prepared for clients, partners &amp; investors · Version 1.0</div>
+  <div class="foot">www.stockwhisk.app · hello@stockwhisk.app · Confidential</div>
+</div>
+
+<div class="sec"><h2><span class="n">01</span>About the company</h2>
+<p class="lead">StockWhisk gives every independent retailer the operational clarity that, until now, only large chains could afford.</p>
+<p>StockWhisk is a multi-tenant, cloud-based retail management platform that unifies inventory control, point of sale, purchasing, receivables and payables, warranty and service management, and financial reporting under one securely partitioned roof. Every business operates in its own isolated workspace — its data never mingles with another's.</p>
+<p>We are engineering-led, security-first, and obsessive about one number every shopkeeper cares about: <strong>true profit</strong>. StockWhisk combines accounting-grade correctness with consumer-grade ease of use.</p>
+<ul>
+<li><strong>What we are:</strong> A vertical SaaS platform for retail operations.</li>
+<li><strong>Who we serve:</strong> Single-outlet and multi-branch shops — retail, electronics, mobile &amp; repair, pharmacy, apparel, hardware and more.</li>
+<li><strong>How we differ:</strong> Weighted-average costing, honest COGS, and tenant-grade security are foundational, not afterthoughts.</li>
+</ul></div>
+
+<div class="sec avoid"><h2><span class="n">02</span>Founder's message</h2>
+<div class="quote">"Every shopkeeper I met was working twice — once at the counter, and again at night with a calculator, trying to figure out whether the day had actually made money. What they didn't have was the truth. We built StockWhisk to end that second shift: one place to sell, restock, track who owes what, and see real profit after cost and returns. Your shop, clearly understood, always in your pocket."</div>
+<p class="muted">— [Founder Name], Founder &amp; CEO, StockWhisk</p></div>
+
+<div class="sec avoid"><h2><span class="n">03</span>The problem</h2>
+<table>
+<tr><th>Pain point</th><th>Business impact</th></tr>
+<tr><td>Inventory guesswork</td><td>Overstock ties up cash; stockouts lose sales.</td></tr>
+<tr><td>Unknown true profit</td><td>Revenue ≠ profit; "good days" hide losses.</td></tr>
+<tr><td>Scattered records</td><td>Sales on paper, dues in a notebook — nothing reconciles.</td></tr>
+<tr><td>Customer &amp; supplier dues</td><td>Money owed is tracked from memory — and quietly leaks.</td></tr>
+<tr><td>No role control</td><td>The cashier can see or change everything.</td></tr>
+<tr><td>Spreadsheet ceiling / ERP overkill</td><td>Excel breaks at scale; enterprise ERP is unaffordable.</td></tr>
+</table></div>
+
+<div class="sec avoid"><h2><span class="n">04</span>Our solution</h2>
+<p>StockWhisk replaces the notebook, the calculator, and five disconnected apps with one coherent system. Scan an item to sell it — stock decrements and profit is booked against real cost. Receive a purchase order — stock rises and the supplier's due updates. Take a partial payment — the customer's balance and the cash ledger stay in lockstep. Close the month — the profit statement, cash flow and inventory valuation are already computed.</p>
+<p><strong>Three principles:</strong> truth over vanity (profit after cost, discounts and returns); isolation by design (every shop's data separated); effortless at the counter (fast for a busy till, simple for a new hire).</p></div>
+
+<div class="sec avoid"><h2><span class="n">05</span>Product overview &amp; key features</h2>
+<div class="grid2">
+<div><strong>Sell</strong><ul><li>Barcode POS, walk-in capture</li><li>Line &amp; invoice discounts</li><li>Cash, card, bank &amp; partial payments</li><li>Branded printable invoices</li></ul></div>
+<div><strong>Stock</strong><ul><li>Live inventory, weighted-average cost</li><li>Low &amp; out-of-stock alerts</li><li>Immutable movement ledger</li><li>Multi-branch stock &amp; transfers</li></ul></div>
+<div><strong>Buy &amp; owe</strong><ul><li>Purchase orders &amp; goods receipt</li><li>Supplier payables</li><li>Customer dues, FIFO allocation</li><li>Per-customer discounts</li></ul></div>
+<div><strong>Understand</strong><ul><li>True profit, VAT, cash flow</li><li>Dashboards &amp; 9+ reports</li><li>Returns, warranty &amp; service tickets</li><li>Role-based access &amp; audit log</li></ul></div>
+</div></div>
+
+<div class="sec avoid"><h2><span class="n">06</span>Industry coverage</h2>
+<table>
+<tr><th>Segment</th><th>Fit</th><th>Segment</th><th>Fit</th></tr>
+<tr><td>General &amp; super shops</td><td>POS, stock, dues</td><td>Electronics &amp; mobile</td><td>Warranty, repair tickets</td></tr>
+<tr><td>Pharmacy &amp; FMCG</td><td>Reorder alerts</td><td>Apparel &amp; cosmetics</td><td>Variations, brands</td></tr>
+<tr><td>Restaurant, cafe &amp; hotel</td><td>Billing, expenses</td><td>Hardware &amp; wholesale</td><td>Supplier dues, bulk buys</td></tr>
+<tr><td>Computer &amp; book stores</td><td>Catalog, barcode</td><td>Multi-branch operators</td><td>Branch stock, reporting</td></tr>
+</table></div>
+
+<div class="sec avoid"><h2><span class="n">07</span>Technology stack</h2>
+<ul>
+<li><strong>Backend:</strong> Python · Django · Django REST Framework</li>
+<li><strong>Frontend:</strong> Server-rendered templates · Bootstrap · Alpine.js · htmx · Chart.js</li>
+<li><strong>Database:</strong> PostgreSQL with strict tenant scoping</li>
+<li><strong>Async:</strong> Celery + Redis (low-stock alerts, nightly stock reconcile, recurring expenses)</li>
+<li><strong>APIs:</strong> REST with JWT auth, throttling &amp; an enterprise API-key tier</li>
+<li><strong>Performance:</strong> O(1) stock write path, N+1 hotspots removed, cached analytics</li>
+</ul></div>
+
+<div class="sec avoid"><h2><span class="n">08</span>Security &amp; data privacy</h2>
+<ul>
+<li><strong>Tenant isolation</strong> — cross-business access architecturally blocked and audited.</li>
+<li><strong>Role-based access</strong> — Owner, Manager, Cashier, Inventory Manager, Accountant.</li>
+<li><strong>Auth hardening</strong> — brute-force lockout (per-IP &amp; per-account), JWT throttling, secure cookies, HSTS.</li>
+<li><strong>App hardening</strong> — Content-Security-Policy, CSRF protection, SQLi-safe ORM, XSS escaping, validated uploads.</li>
+<li><strong>Data integrity</strong> — DB-level non-negative constraints, immutable audit &amp; stock ledgers, atomic concurrency-safe transactions.</li>
+</ul></div>
+
+<div class="sec avoid"><h2><span class="n">09</span>Pricing</h2>
+<p>Transparent and simple — <span class="price-badge">Flat ৳799 / month</span></p>
+<p>One plan. Every feature. No per-transaction fees, no hidden charges.</p>
+<table>
+<tr><th>Included in every subscription</th><th></th></tr>
+<tr><td>POS &amp; billing · Inventory &amp; stock control</td><td>Purchases &amp; suppliers · Due management</td></tr>
+<tr><td>Profit analytics &amp; reports · Dashboard</td><td>Multi-user &amp; role management</td></tr>
+<tr><td>Barcode &amp; stock alerts · Returns &amp; warranty</td><td>Cloud backup · Secure login · Mobile access</td></tr>
+</table>
+<p class="muted">Free demo, free setup and free training included. Billed monthly; annual billing available on request. Multi-branch / API needs — talk to us.</p></div>
+
+<div class="sec avoid"><h2><span class="n">10</span>Benefits</h2>
+<table>
+<tr><th>For the business</th><th>The outcome</th></tr>
+<tr><td>Real-time inventory</td><td>Less dead stock, fewer stockouts, freed-up cash</td></tr>
+<tr><td>True profit visibility</td><td>Confident pricing &amp; purchasing decisions</td></tr>
+<tr><td>Automated dues tracking</td><td>Recover money that used to leak away</td></tr>
+<tr><td>Faster checkout</td><td>Shorter queues, happier customers</td></tr>
+<tr><td>Delegation with control</td><td>Grow the team without losing oversight</td></tr>
+<tr><td>Anywhere access</td><td>Manage the shop from the counter or the sofa</td></tr>
+</table></div>
+
+<div class="sec avoid"><h2><span class="n">11</span>Customer success workflow</h2>
+<p><strong>1. Discover</strong> — free demo or trial. &nbsp; <strong>2. Onboard</strong> — assisted setup &amp; data import. &nbsp; <strong>3. Go live</strong> — first sale, same day. &nbsp; <strong>4. Adopt</strong> — team training, alerts on. &nbsp; <strong>5. Optimize</strong> — monthly profit &amp; stock reviews. &nbsp; <strong>6. Grow</strong> — add branches &amp; users. &nbsp; <strong>7. Support</strong> — responsive help &amp; proactive check-ins.</p></div>
+
+<div class="sec avoid"><h2><span class="n">12</span>Roadmap</h2>
+<table>
+<tr><th>Horizon</th><th>Focus</th></tr>
+<tr><td>Now (live)</td><td>POS, inventory, purchasing, dues, returns, warranty/service, accounting, analytics, RBAC, multi-branch, bulk import</td></tr>
+<tr><td>Next (0–6 mo)</td><td>Payment-gateway integrations, e-invoicing, mobile companion app, deeper VAT automation</td></tr>
+<tr><td>Near (6–12 mo)</td><td>Loyalty &amp; promotions, WhatsApp/SMS engagement, supplier portals, forecasting</td></tr>
+<tr><td>Future (12 mo+)</td><td>AI demand prediction, e-commerce sync, franchise consolidation, developer platform</td></tr>
+</table></div>
+
+<div class="sec avoid"><h2><span class="n">13</span>Competitive advantages</h2>
+<ul>
+<li><strong>Correctness as a feature</strong> — weighted-average costing &amp; returns-aware profit, where generic POS stops at revenue.</li>
+<li><strong>Security-first multi-tenancy</strong> — verified isolation and hardened auth, not a bolt-on.</li>
+<li><strong>All-in-one, truly integrated</strong> — one live data model vs. stitched-together point tools.</li>
+<li><strong>Right-sized</strong> — more capable than a basic POS, far simpler and cheaper than ERP.</li>
+<li><strong>Repair-shop native</strong> — warranty &amp; service ticketing built in.</li>
+<li><strong>Performance at scale</strong> — cached analytics and an O(1) stock engine keep it fast under load.</li>
+</ul></div>
+
+<div class="sec avoid"><h2><span class="n">14</span>Testimonials <span class="muted" style="font-size:10pt;font-weight:400">(sample placeholders)</span></h2>
+<div class="quote">"StockWhisk showed me my real profit for the first time. I stopped over-ordering two product lines and freed up serious cash in a month." — [Owner Name], Electronics Retail</div>
+<div class="quote">"Checkout is fast and my customers' dues are finally under control. Nothing slips through anymore." — [Owner Name], General Store</div>
+<div class="quote">"Managing three branches used to be chaos. Now it's one dashboard." — [Owner Name], Multi-Branch Operator</div></div>
+
+<div class="sec avoid"><h2><span class="n">15</span>Frequently asked questions</h2>
+<p><strong>Is my data safe and private?</strong> Yes — each business runs in an isolated workspace; access is authenticated, authorized and logged.</p>
+<p><strong>Do I need to install anything?</strong> No — StockWhisk runs in the browser on desktop, tablet and mobile.</p>
+<p><strong>Can it handle multiple branches and staff?</strong> Yes — multi-branch stock, transfers and role-based access.</p>
+<p><strong>How is profit calculated?</strong> Revenue minus discounts and true weighted-average cost, adjusted for returns — not just top-line sales.</p>
+<p><strong>What does it cost?</strong> A flat ৳799/month with every feature included and no per-transaction fees.</p>
+<p><strong>Can I import my existing data?</strong> Yes — bulk product and dues import, with onboarding assistance.</p></div>
+
+<div class="sec avoid"><h2><span class="n">16</span>Contact &amp; call to action</h2>
+<div class="cta-box">
+<h3>See your shop clearly — starting today.</h3>
+<p>Every decision at your counter deserves numbers you can trust. Start your free demo and go live the same day.</p>
+<p><strong>▶ Free trial:</strong> www.stockwhisk.app &nbsp; <strong>▶ Book a demo:</strong> [calendar link] &nbsp; <strong>▶ Talk to us:</strong> sales@stockwhisk.app</p>
+</div>
+<p style="margin-top:12px"><strong>StockWhisk</strong> · [Company Legal Name]<br>
+📍 [Address, City, Bangladesh] &nbsp; 🌐 www.stockwhisk.app &nbsp; ✉ hello@stockwhisk.app<br>
+☎ [Phone] &nbsp; WhatsApp [Number] &nbsp; Facebook / Instagram / YouTube: @stockwhisk</p>
+<p class="muted" style="font-size:9pt;margin-top:14px">This document is confidential and prepared for informational purposes. Figures marked as placeholders are illustrative. © [Year] StockWhisk. All rights reserved.</p></div>
+
+</body>
+</html>

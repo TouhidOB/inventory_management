@@ -1,0 +1,28 @@
+{% extends "web/base.html" %}
+{% block auth %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-brand p-4">
+  <div class="w-100 bg-white rounded-4 shadow-lg p-4 p-md-5" style="max-width:24rem">
+    <div class="text-center mb-4">
+      <div class="fs-3 fw-bold">StockWhisk</div>
+      <div class="text-secondary small">Sign in to your shop</div>
+    </div>
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-danger py-2 px-3">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'web:login' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label small fw-medium">Email</label>
+        <input name="email" type="email" required autofocus class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-medium">Password</label>
+        <input name="password" type="password" required class="form-control">
+      </div>
+      <button class="btn btn-brand w-100">Sign in</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

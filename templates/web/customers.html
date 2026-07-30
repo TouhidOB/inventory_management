@@ -1,0 +1,66 @@
+{% extends "web/base.html" %}
+{% block title %}Customers{% endblock %}
+{% block heading %}Customers{% endblock %}
+{% block content %}
+<div x-data="{add:false, edit:null}" class="vstack gap-3">
+  <div class="d-flex justify-content-between gap-3">
+    <input data-filter="#customerTable" value="{{ q }}" placeholder="Filter name/phone as you type…" class="form-control form-control-sm" style="max-width:18rem">
+    {% if is_owner or 'manage_customers' in perms_set %}<button @click="add=!add" class="btn btn-brand btn-sm">+ Add customer</button>{% endif %}
+  </div>
+  <div x-show="add" x-cloak class="card shadow-sm"><div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-4"><input name="name" required placeholder="Name" class="form-control form-control-sm"></div>
+      <div class="col-md-4"><input name="phone" placeholder="Phone" class="form-control form-control-sm"></div>
+      <div class="col-md-4"><input name="email" placeholder="Email" class="form-control form-control-sm"></div>
+      <div class="col-md-8"><input name="address" placeholder="Address" class="form-control form-control-sm"></div>
+      <div class="col-md-4"><input name="discount_percent" type="number" step="0.01" min="0" max="100" placeholder="Default discount %" class="form-control form-control-sm"></div>
+      <div class="col-12"><label class="form-check-label small"><input type="checkbox" name="whatsapp_consent" class="form-check-input me-1"> WhatsApp opt-in</label></div>
+      <div class="col-12"><button class="btn btn-brand btn-sm">Save</button></div>
+    </form>
+  </div></div>
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table id="customerTable" class="table table-striped table-sm align-middle mb-0">
+        <thead class="thead-3"><tr><th>Name</th><th>Phone</th><th>Segment</th><th class="text-end">Discount</th><th class="text-end">Due</th>{% if is_owner or 'manage_customers' in perms_set %}<th class="text-end">Actions</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td>{{ c.name }}</td><td class="text-secondary">{{ c.phone }}</td><td class="text-capitalize">{{ c.segment }}</td><td class="text-end">{{ c.discount_percent }}%</td><td class="text-end {% if c.due_balance > 0 %}text-danger{% endif %}">{{ c.due_balance }}</td>
+            {% if is_owner or 'manage_customers' in perms_set %}
+            <td class="text-end text-nowrap">
+              <button @click="edit = (edit==={{ c.id }} ? null : {{ c.id }})" class="btn btn-link btn-sm p-0 me-2">Edit</button>
+              <form method="post" class="d-inline">{% csrf_token %}
+                <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ c.id }}">
+                <button type="button" data-confirm="Delete customer “{{ c.name|escapejs }}”?" class="btn btn-link btn-sm text-danger p-0">Delete</button></form>
+            </td>
+            {% endif %}
+          </tr>
+          {% if is_owner or 'manage_customers' in perms_set %}
+          <tr x-show="edit==={{ c.id }}" x-cloak class="table-active">
+            <td colspan="6">
+              <form method="post" class="row g-2 align-items-end">{% csrf_token %}
+                <input type="hidden" name="action" value="edit"><input type="hidden" name="id" value="{{ c.id }}">
+                <div class="col-md-3"><label class="small">Name<input name="name" value="{{ c.name }}" required class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><label class="small">Phone<input name="phone" value="{{ c.phone }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-3"><label class="small">Email<input name="email" value="{{ c.email }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><label class="small">Discount %<input name="discount_percent" type="number" step="0.01" min="0" max="100" value="{{ c.discount_percent }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-4"><label class="small">Address<input name="address" value="{{ c.address }}" class="form-control form-control-sm"></label></div>
+                <div class="col-md-2"><button class="btn btn-brand btn-sm">Save changes</button></div>
+              </form>
+            </td>
+          </tr>
+          {% endif %}
+          {% empty %}<tr data-empty><td colspan="6" class="text-center text-secondary py-5">
+            <div style="font-size:2.5rem;line-height:1">👥</div>
+            <div class="fw-semibold mt-2">No customers yet</div>
+            <div class="small mb-3">Add a customer here, or one is created automatically on a POS sale.</div>
+            <button @click="add=true" class="btn btn-brand btn-sm">+ Add customer</button>
+          </td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include "web/_pagination.html" %}
+{% endblock %}

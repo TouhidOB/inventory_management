@@ -1,0 +1,19 @@
+{% extends "web/public/base.html" %}
+{% block title %}Features · StockWhisk{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:56rem">
+  <h1 class="fw-bold">Everything a retail shop needs</h1>
+  <div class="row g-4 mt-2">
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Point of Sale</h3><p class="small text-secondary">Barcode scanning, quick checkout, out-of-stock protection, per-customer discounts, multiple payment methods (cash, bKash, Nagad, card, bank).</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Inventory</h3><p class="small text-secondary">Append-only stock ledger, restock with weighted-average costing, damage/adjustment tracking, low & out-of-stock alerts, dead-stock detection.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Catalog</h3><p class="small text-secondary">Products, categories & subcategories, brands, units, variations, SKU/barcode.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Purchasing</h3><p class="small text-secondary">Suppliers, purchase orders, goods-received into stock, supplier dues.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Customers (CRM)</h3><p class="small text-secondary">Profiles, due tracking, segments, inactive-customer detection, WhatsApp opt-in.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Accounting</h3><p class="small text-secondary">Transparent profit (revenue − COGS − expenses), cash flow, receivables/payables, daily→yearly views.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Service & Warranty</h3><p class="small text-secondary">Repair tickets with status history, technician workload, parts from stock, warranty tracking, printable service invoices.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Analytics & Reports</h3><p class="small text-secondary">Dashboards, charts, top products, and detailed sales & repair reports with CSV/Excel/PDF export.</p></div>
+    <div class="col-md-6"><h3 class="h6 fw-semibold text-brand">Dues & roles</h3><p class="small text-secondary">Customer & supplier due management with payment collection, custom staff roles & fine-grained permissions.</p></div>
+  </div>
+  <a href="{% url 'web:signup' %}" class="btn btn-brand btn-lg mt-4">Request access</a>
+</div>
+{% endblock %}

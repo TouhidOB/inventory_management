@@ -1,0 +1,113 @@
+{% comment %}Full analytics chart suite. Needs `charts` (analytics.reports_charts) in
+context. Used by both the Reports page and the Dashboard.{% endcomment %}
+{{ charts|json_script:"charts-data" }}
+
+<h2 class="small fw-bold text-secondary text-uppercase mb-2">1 · Revenue &amp; Sales Performance</h2>
+<div class="row g-3 mb-2">
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Revenue trend — Parts vs Labor</div>
+    <canvas id="cRev" height="150"></canvas>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Sales mix (this month)</div>
+    <canvas id="cMix" height="150"></canvas>
+  </div></div></div>
+</div>
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <div class="fw-semibold small mb-2">Top-selling parts (90d)</div>
+  <canvas id="cTop" height="120"></canvas>
+</div></div>
+
+<h2 class="small fw-bold text-secondary text-uppercase mb-2">2 · Repair Operations &amp; Efficiency</h2>
+<div class="row g-3 mb-4">
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="d-flex align-items-baseline justify-content-between mb-2">
+      <div class="fw-semibold small">Turnaround time (days)</div>
+      <div id="tatStats" class="small text-secondary"></div>
+    </div>
+    <canvas id="cTat" height="150"></canvas>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Repair volume by device type (8 wks)</div>
+    <canvas id="cDev" height="150"></canvas>
+  </div></div></div>
+  <div class="col-12"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Common issues (Pareto)</div>
+    <canvas id="cPareto" height="90"></canvas>
+  </div></div></div>
+</div>
+
+<h2 class="small fw-bold text-secondary text-uppercase mb-2">3 · Inventory &amp; Stock Management</h2>
+<div class="row g-3 mb-4">
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-1">Stock turnover</div>
+    <div class="small text-secondary mb-2">Bottom-right = dead stock (old, low margin) · top-left = winners</div>
+    <canvas id="cTurn" height="150"></canvas>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body">
+    <div class="fw-semibold small mb-2">Reorder triggers — stock vs threshold</div>
+    <canvas id="cReorder" height="150"></canvas>
+  </div></div></div>
+</div>
+
+<h2 class="small fw-bold text-secondary text-uppercase mb-2">4 · Customer Insights</h2>
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <div class="fw-semibold small mb-2">New vs returning customers</div>
+  <canvas id="cAcq" height="110"></canvas>
+</div></div>
+
+<script>
+(function(){
+  const C = JSON.parse(document.getElementById('charts-data').textContent);
+  const PAL = ['#003f5c','#006770','#008c54','#7aa609','#ffa600'];
+  const el = id => document.getElementById(id);
+  const rgba = (hex,a) => { const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+
+  new Chart(el('cRev'),{type:'line',data:{labels:C.revenue_trend.labels,datasets:[
+    {label:'Parts',data:C.revenue_trend.parts,borderColor:PAL[0],backgroundColor:rgba(PAL[0],.35),fill:true,tension:.3},
+    {label:'Labor / Repairs',data:C.revenue_trend.labor,borderColor:PAL[1],backgroundColor:rgba(PAL[1],.35),fill:true,tension:.3}]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{y:{stacked:true,beginAtZero:true},x:{stacked:true}}}});
+
+  new Chart(el('cMix'),{type:'doughnut',data:{labels:C.sales_mix.labels,
+    datasets:[{data:C.sales_mix.values,backgroundColor:[PAL[0],PAL[3],PAL[2]]}]},
+    options:{plugins:{legend:{position:'right'}}}});
+
+  new Chart(el('cTop'),{type:'bar',data:{labels:C.top_parts.labels,
+    datasets:[{data:C.top_parts.values,backgroundColor:PAL[0]}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+
+  const s=C.tat.stats;
+  el('tatStats').textContent = s.count ? `median ${s.median}d · avg ${s.avg}d · max ${s.max}d (n=${s.count})` : 'no delivered jobs yet';
+  new Chart(el('cTat'),{type:'bar',data:{labels:C.tat.labels,
+    datasets:[{data:C.tat.values,backgroundColor:PAL[1]}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+
+  new Chart(el('cDev'),{type:'bar',data:{labels:C.device_volume.labels,
+    datasets:C.device_volume.datasets.map((d,i)=>({label:d.label,data:d.data,backgroundColor:PAL[i%PAL.length]}))},
+    options:{plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}});
+
+  new Chart(el('cPareto'),{data:{labels:C.issue_pareto.labels,datasets:[
+    {type:'bar',label:'Tickets',data:C.issue_pareto.counts,backgroundColor:PAL[0],yAxisID:'y'},
+    {type:'line',label:'Cumulative %',data:C.issue_pareto.cumulative,borderColor:PAL[4],backgroundColor:PAL[4],tension:.2,yAxisID:'y1'}]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{
+      y:{beginAtZero:true,ticks:{precision:0}},
+      y1:{position:'right',beginAtZero:true,max:100,grid:{drawOnChartArea:false},ticks:{callback:v=>v+'%'}}}}});
+
+  new Chart(el('cTurn'),{type:'scatter',data:{datasets:[{label:'Products',
+    data:C.stock_turnover.points,backgroundColor:PAL[1]}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{
+      label:c=>`${c.raw.label}: ${c.raw.x}d, ${c.raw.y}% margin`}}},
+      scales:{x:{title:{display:true,text:'Days in inventory'},beginAtZero:true},
+              y:{title:{display:true,text:'Profit margin %'}}}}});
+
+  new Chart(el('cReorder'),{type:'bar',data:{labels:C.reorder.map(r=>r.name),datasets:[
+    {label:'Current stock',data:C.reorder.map(r=>r.current),backgroundColor:PAL[0]},
+    {label:'Reorder threshold',data:C.reorder.map(r=>r.threshold),backgroundColor:PAL[4]}]},
+    options:{indexAxis:'y',plugins:{legend:{position:'bottom'}},scales:{x:{beginAtZero:true}}}});
+
+  new Chart(el('cAcq'),{type:'bar',data:{labels:C.acquisition.labels,datasets:[
+    {label:'First-time',data:C.acquisition.new,backgroundColor:PAL[2]},
+    {label:'Returning',data:C.acquisition.returning,backgroundColor:PAL[0]}]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}});
+})();
+</script>

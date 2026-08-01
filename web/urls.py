@@ -61,6 +61,7 @@ urlpatterns = [
     path("reports/export/<str:rtype>/", views.report_export, name="report_export"),
 
     path("service/tickets/", views.tickets, name="tickets"),
+    path("service/tickets/<int:pk>/", views.ticket_detail, name="ticket_detail"),
     path("service/tickets/<int:pk>/status/", views.ticket_status, name="ticket_status"),
     path("service/tickets/<int:pk>/invoice/", views.ticket_invoice, name="ticket_invoice"),
     path("service/warranties/", views.warranties, name="warranties"),
@@ -70,6 +71,7 @@ urlpatterns = [
     path("notifications/", views.notifications, name="notifications"),
     path("tutorials/", views.tutorials, name="tutorials"),
     path("barcodes/", views.barcodes, name="barcodes"),
+    path("barcodes/<int:pk>/edit/", views.barcode_edit, name="barcode_edit"),
     path("users/", views.users, name="users"),
     path("settings/", views.settings_view, name="settings"),
 ]

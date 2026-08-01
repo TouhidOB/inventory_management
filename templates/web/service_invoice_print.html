@@ -44,11 +44,11 @@
     </div>
 
     <table class="table table-sm">
-      <thead style="background:#D2C1B6"><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Amount</th></tr></thead>
+      <thead style="background:#D2C1B6"><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Unit price</th><th class="text-end">Amount</th></tr></thead>
       <tbody>
-        <tr><td>Service / labour charge</td><td class="text-end">1</td><td class="text-end">{{ ticket.service_charge }}</td></tr>
+        <tr><td>Service / labour charge</td><td class="text-end">1</td><td class="text-end">{{ ticket.service_charge }}</td><td class="text-end">{{ ticket.service_charge }}</td></tr>
         {% for p in ticket.parts.all %}
-        <tr><td>Part: {{ p.product.name }}</td><td class="text-end">{{ p.quantity }}</td><td class="text-end">{{ p.unit_cost }}</td></tr>
+        <tr><td>Part: {{ p.product.name }}</td><td class="text-end">{{ p.quantity }}</td><td class="text-end">{{ p.unit_price }}</td><td class="text-end">{{ p.line_total }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -58,6 +58,8 @@
         <tr><td class="text-secondary">Service charge</td><td class="text-end">{{ ticket.service_charge }}</td></tr>
         <tr><td class="text-secondary">Parts</td><td class="text-end">{{ parts_total }}</td></tr>
         <tr class="fw-bold border-top"><td>Total</td><td class="text-end">{{ shop.currency }} {{ total }}</td></tr>
+        <tr><td class="text-secondary">Paid</td><td class="text-end">{{ ticket.paid }}</td></tr>
+        <tr><td class="text-secondary">Due</td><td class="text-end {% if ticket.due > 0 %}fw-semibold{% endif %}">{{ shop.currency }} {{ ticket.due }}</td></tr>
       </table>
     </div>
   </main>

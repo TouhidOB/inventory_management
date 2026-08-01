@@ -24,10 +24,11 @@
           <th>Barcode</th><th>Product</th>
           <th class="text-end">Purchase price</th><th class="text-end">Selling price</th>
           <th class="text-end">Profit</th><th class="text-end">Warranty</th>
-          <th class="text-center">Status</th><th>Added</th></tr></thead>
+          <th class="text-center">Status</th><th>Added</th>
+          {% if is_owner or 'manage_products' in perms_set %}<th></th>{% endif %}</tr></thead>
         <tbody>
           {% for u in units %}
-          <tr>
+          <tr x-data="{edit:false}">
             <td class="font-monospace">{{ u.barcode }}</td>
             <td><a href="{% url 'web:product_profile' u.product_id %}" class="text-decoration-none">{{ u.product.name }}</a></td>
             <td class="text-end">{{ current_shop.currency }} {{ u.effective_cost_price|floatformat:2 }}</td>
@@ -39,8 +40,24 @@
               {% elif u.status == 'returned' %}<span class="badge text-bg-warning">Returned</span>
               {% else %}<span class="badge text-bg-success">In stock</span>{% endif %}</td>
             <td class="small text-secondary">{{ u.created_at|date:"M d, Y" }}</td>
+            {% if is_owner or 'manage_products' in perms_set %}
+            <td class="text-end"><button @click="edit=!edit" class="btn btn-link btn-sm p-0">Edit</button></td>
+            {% endif %}
           </tr>
-          {% empty %}<tr data-empty><td colspan="8" class="text-center text-secondary py-5">
+          {% if is_owner or 'manage_products' in perms_set %}
+          <tr x-show="edit" x-cloak class="table-active">
+            <td colspan="9">
+              <form method="post" action="{% url 'web:barcode_edit' u.id %}" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-4"><label class="small">Barcode</label><input name="barcode" value="{{ u.barcode }}" required class="form-control form-control-sm font-monospace"></div>
+                <div class="col-md-3"><label class="small">Selling price</label><input name="selling_price" type="number" step="0.01" min="0" value="{{ u.effective_selling_price }}" class="form-control form-control-sm"></div>
+                <div class="col-md-3"><label class="small">Warranty (months)</label><input name="warranty_months" type="number" min="0" value="{{ u.effective_warranty_months }}" class="form-control form-control-sm"></div>
+                <div class="col-md-2"><button class="btn btn-brand btn-sm w-100">Save</button></div>
+              </form>
+            </td>
+          </tr>
+          {% endif %}
+          {% empty %}<tr data-empty><td colspan="9" class="text-center text-secondary py-5">
             <div style="font-size:2.5rem;line-height:1">▦</div>
             <div class="fw-semibold mt-2">No barcodes yet</div>
             <div class="small">Add per-unit barcodes via bulk scan on the Purchase page.</div>

@@ -26,21 +26,21 @@
   <div class="col-6 col-lg-3">
     <div class="card shadow-sm h-100"><div class="card-body">
       <div class="small text-secondary">Today revenue</div>
-      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.today.revenue }}</div>
+      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.today.revenue|floatformat:2 }}</div>
     </div></div>
   </div>
   {% if can_profit %}
   <div class="col-6 col-lg-3">
     <div class="card shadow-sm h-100"><div class="card-body">
       <div class="small text-secondary">Today net profit</div>
-      <div class="fs-4 fw-bold text-success">{{ current_shop.currency }} {{ summary.today.net_profit }}</div>
+      <div class="fs-4 fw-bold text-success">{{ current_shop.currency }} {{ summary.today.net_profit|floatformat:2 }}</div>
     </div></div>
   </div>
   {% endif %}
   <div class="col-6 col-lg-3">
     <div class="card shadow-sm h-100"><div class="card-body">
       <div class="small text-secondary">Stock value</div>
-      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.stock_value }}</div>
+      <div class="fs-4 fw-bold">{{ current_shop.currency }} {{ summary.stock_value|floatformat:2 }}</div>
     </div></div>
   </div>
   <div class="col-6 col-lg-3">
@@ -59,9 +59,9 @@
       <div class="fw-semibold mb-3">Financial position</div>
       <div class="table-responsive"><table class="table table-striped table-sm mb-0">
         <thead class="thead-3"><tr><th>Account</th><th class="text-end">Amount</th></tr></thead>
-        <tr><td class="text-secondary">Cash</td><td class="text-end">{{ summary.position.cash_balance }}</td></tr>
-        <tr><td class="text-secondary">Receivables</td><td class="text-end">{{ summary.position.receivables }}</td></tr>
-        <tr><td class="text-secondary">Payables</td><td class="text-end">{{ summary.position.payables }}</td></tr>
+        <tr><td class="text-secondary">Cash</td><td class="text-end">{{ current_shop.currency }} {{ summary.position.cash_balance|floatformat:2 }}</td></tr>
+        <tr><td class="text-secondary">Receivables</td><td class="text-end">{{ current_shop.currency }} {{ summary.position.receivables|floatformat:2 }}</td></tr>
+        <tr><td class="text-secondary">Payables</td><td class="text-end">{{ current_shop.currency }} {{ summary.position.payables|floatformat:2 }}</td></tr>
       </table></div>
     </div></div>
   </div>

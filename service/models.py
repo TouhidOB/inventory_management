@@ -1,5 +1,6 @@
 """Warranty tracking (9.1) + service tickets (9.2)."""
 from datetime import timedelta
+from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.db import models
@@ -142,6 +143,7 @@ class ServiceTicket(TenantScopedModel):
     )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.RECEIVED)
     service_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estimated_delivery = models.DateField(null=True, blank=True)
     actual_delivery = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(
@@ -163,6 +165,19 @@ class ServiceTicket(TenantScopedModel):
             return self.estimated_delivery < timezone.localdate()
         return False
 
+    @property
+    def parts_total(self):
+        return sum((p.line_total for p in self.parts.all()), Decimal("0"))
+
+    @property
+    def bill_total(self):
+        """Customer bill = labour (service_charge) + parts at their sell price."""
+        return (self.service_charge or Decimal("0")) + self.parts_total
+
+    @property
+    def due(self):
+        return self.bill_total - (self.paid or Decimal("0"))
+
 
 class ServiceTicketPart(TenantScopedModel):
     """A part consumed on a ticket. If ``from_stock`` the product stock is
@@ -172,7 +187,14 @@ class ServiceTicketPart(TenantScopedModel):
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="service_parts")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1)
     unit_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    # What the customer is charged for this part (unit_cost is COGS). Defaults to
+    # the product's selling price when the part is added.
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     from_stock = models.BooleanField(default=True)
+
+    @property
+    def line_total(self):
+        return (self.quantity or 0) * (self.unit_price or 0)
 
     def __str__(self):
         return f"{self.quantity} x {self.product_id} on ticket#{self.ticket_id}"

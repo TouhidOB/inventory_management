@@ -105,12 +105,15 @@ def change_ticket_status(*, ticket, new_status, note="", changed_by=None):
 
 
 @transaction.atomic
-def add_ticket_part(*, ticket, product, quantity=1, unit_cost=None, from_stock=True, created_by=None):
-    """Record a part on a ticket; deduct from stock ledger when from_stock."""
+def add_ticket_part(*, ticket, product, quantity=1, unit_cost=None, unit_price=None,
+                    from_stock=True, created_by=None):
+    """Record a part on a ticket; deduct from stock ledger when from_stock.
+    ``unit_price`` is the customer charge (defaults to the product's sell price)."""
     unit_cost = product.cost_price if unit_cost is None else unit_cost
+    unit_price = product.selling_price if unit_price is None else unit_price
     part = ServiceTicketPart.objects.create(
         shop=ticket.shop, ticket=ticket, product=product,
-        quantity=quantity, unit_cost=unit_cost, from_stock=from_stock,
+        quantity=quantity, unit_cost=unit_cost, unit_price=unit_price, from_stock=from_stock,
     )
     if from_stock and product.track_inventory:
         apply_movement(
@@ -119,6 +122,27 @@ def add_ticket_part(*, ticket, product, quantity=1, unit_cost=None, from_stock=T
             reference_id=ticket.id, note=f"Part used on {ticket.ticket_no}", created_by=created_by,
         )
     return part
+
+
+@transaction.atomic
+def add_ticket_payment(*, ticket, amount, method="cash", created_by=None):
+    """Collect a payment against a ticket bill. Increments ``paid``, caps at the
+    outstanding due, and posts a cash-in ledger entry."""
+    from decimal import Decimal
+    from accounting.models import LedgerEntry
+    amount = Decimal(amount)
+    if amount <= 0:
+        raise ValueError("Amount must be positive.")
+    if amount > ticket.due:
+        raise ValueError(f"Amount exceeds outstanding due of {ticket.due}.")
+    ticket.paid = (ticket.paid or Decimal("0")) + amount
+    ticket.save(update_fields=["paid", "updated_at"])
+    LedgerEntry.objects.create(
+        shop=ticket.shop, account=LedgerEntry.Account.CASH, amount=amount,
+        source_type="ServiceTicket", source_id=str(ticket.id),
+        description=f"Payment for ticket {ticket.ticket_no}",
+    )
+    return ticket
 
 
 def refresh_warranty_statuses(shop, soon_days=30):

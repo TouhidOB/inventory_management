@@ -48,7 +48,10 @@ from purchasing.services import (
 from sales.models import Sale, SaleItem
 from sales.services import add_payment, collect_customer_due, create_sale, edit_sale
 from service.models import ServiceTicket, Warranty
-from service.services import change_ticket_status, create_ticket, lookup_warranties
+from service.services import (
+    add_ticket_part, add_ticket_payment, change_ticket_status, create_ticket,
+    lookup_warranties,
+)
 from tenants.models import SubscriptionPlan
 
 from .guards import perm_required, shop_member_required
@@ -760,6 +763,32 @@ def barcodes(request):
     return render(request, "web/barcodes.html", {
         "active": "barcodes", "units": page, "page_obj": page, "q": q, "status": status,
     })
+
+
+@shop_member_required
+@perm_required("manage_products")
+def barcode_edit(request, pk):
+    """Fix a wrong barcode (and optionally its price/warranty) on a single unit."""
+    from catalog.models import ProductUnit
+    unit = get_object_or_404(ProductUnit.objects, pk=pk)
+    if request.method == "POST":
+        new_code = (request.POST.get("barcode") or "").strip()
+        if not new_code:
+            messages.error(request, "Barcode cannot be empty.")
+            return redirect("web:barcodes")
+        # Block collision with a different unit's barcode in this shop.
+        clash = ProductUnit.objects.filter(barcode=new_code).exclude(pk=unit.pk).exists()
+        if clash:
+            messages.error(request, f"Barcode “{new_code}” is already used by another item.")
+            return redirect("web:barcodes")
+        unit.barcode = _clip(new_code, 100)
+        if request.POST.get("selling_price"):
+            unit.selling_price = _dec_nn(request.POST.get("selling_price"))
+        if request.POST.get("warranty_months") != "":
+            unit.warranty_months = int(request.POST.get("warranty_months") or 0)
+        unit.save(update_fields=["barcode", "selling_price", "warranty_months", "updated_at"])
+        messages.success(request, "Barcode updated.")
+    return redirect("web:barcodes")
 
 
 @shop_member_required
@@ -1846,13 +1875,63 @@ def ticket_status(request, pk):
 def ticket_invoice(request, pk):
     """Printable service invoice/receipt handed to the customer on delivery (item 14)."""
     ticket = get_object_or_404(
-        ServiceTicket.objects.prefetch_related("parts").select_related("customer"), pk=pk
+        ServiceTicket.objects.prefetch_related("parts__product").select_related("customer"), pk=pk
     )
-    parts_total = sum((p.quantity * p.unit_cost for p in ticket.parts.all()), Decimal("0"))
-    total = (ticket.service_charge or Decimal("0")) + parts_total
     return render(request, "web/service_invoice_print.html", {
         "ticket": ticket, "shop": request.user.shop,
-        "parts_total": parts_total, "total": total,
+        "parts_total": ticket.parts_total, "total": ticket.bill_total,
+    })
+
+
+@shop_member_required
+@perm_required("view_service")
+def ticket_detail(request, pk):
+    """Ticket workbench: add parts (products) to the bill, set the service
+    charge, and collect payments — with running total / paid / due."""
+    ticket = get_object_or_404(
+        ServiceTicket.objects.prefetch_related("parts__product").select_related("customer"), pk=pk
+    )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            if action == "add_part":
+                if not request.user.has_perm_code("manage_service"):
+                    raise PermissionError("Not allowed to edit tickets.")
+                product = Product.objects.filter(pk=_int_or_none(request.POST.get("product"))).first()
+                if product is None:
+                    raise ValueError("Pick a valid product.")
+                add_ticket_part(
+                    ticket=ticket, product=product,
+                    quantity=_dec_nn(request.POST.get("quantity", 1)) or Decimal("1"),
+                    unit_price=_dec_nn(request.POST.get("unit_price")) if request.POST.get("unit_price") else None,
+                    from_stock=request.POST.get("from_stock") == "on",
+                    created_by=request.user,
+                )
+                messages.success(request, f"Added {product.name} to the ticket.")
+            elif action == "remove_part":
+                if not request.user.has_perm_code("manage_service"):
+                    raise PermissionError("Not allowed to edit tickets.")
+                ticket.parts.filter(pk=_int_or_none(request.POST.get("part_id"))).delete()
+                messages.success(request, "Part removed.")
+            elif action == "set_charge":
+                if not request.user.has_perm_code("manage_service"):
+                    raise PermissionError("Not allowed to edit tickets.")
+                ticket.service_charge = _dec_nn(request.POST.get("service_charge"))
+                ticket.save(update_fields=["service_charge", "updated_at"])
+                messages.success(request, "Service charge updated.")
+            elif action == "add_payment":
+                add_ticket_payment(
+                    ticket=ticket, amount=_dec(request.POST.get("amount")),
+                    method=request.POST.get("method", "cash"), created_by=request.user,
+                )
+                messages.success(request, "Payment recorded.")
+        except (ValueError, PermissionError) as exc:
+            messages.error(request, str(exc))
+        return redirect("web:ticket_detail", pk=ticket.id)
+
+    return render(request, "web/ticket_detail.html", {
+        "active": "tickets", "ticket": ticket,
+        "products": Product.objects.filter(is_active=True).order_by("name"),
     })
 
 

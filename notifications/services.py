@@ -14,17 +14,20 @@ def alert_low_stock_realtime(*, shop, products):
     """
     Raise an immediate low/out-of-stock notification for the given products.
 
-    Called right after a sale (via ``transaction.on_commit``). No-op unless the
-    shop's alert config is enabled AND in REALTIME mode — DAILY shops rely on
-    the ``scan_low_stock`` Celery digest instead. De-dupes so a product with an
-    existing unread low-stock notice isn't alerted again.
+    Called right after a sale (via ``transaction.on_commit``). The in-app bell
+    notification is ALWAYS raised immediately when a sold product is low/out of
+    stock (as long as low-stock alerts are enabled) — ``mode`` only decides
+    whether external channels (email/SMS/WhatsApp) fire now (REALTIME) or are
+    left to the daily digest (DAILY). De-dupes so a product with an existing
+    unread low-stock notice isn't alerted again.
     """
     cfg = get_alert_config(shop)
-    if not cfg.low_stock_enabled or cfg.mode != ShopAlertConfig.Mode.REALTIME:
+    if not cfg.low_stock_enabled:
         return
 
+    realtime = cfg.mode == ShopAlertConfig.Mode.REALTIME
     for product in products:
-        # ``current_stock`` was refreshed on the instance by recalc_stock.
+        # ``current_stock`` was refreshed on the instance by the stock write path.
         if not product.is_low_stock:
             continue
         already = Notification.all_objects.filter(
@@ -42,7 +45,10 @@ def alert_low_stock_realtime(*, shop, products):
                 else f"{product.name} is low: {product.current_stock}/{product.reorder_level} left."
             ),
             metadata={"product_id": product.id, "current_stock": str(product.current_stock)},
-            email=cfg.email_enabled, sms=cfg.sms_enabled, whatsapp=cfg.whatsapp_enabled,
+            # In-app always; external channels only in real-time mode.
+            email=cfg.email_enabled and realtime,
+            sms=cfg.sms_enabled and realtime,
+            whatsapp=cfg.whatsapp_enabled and realtime,
         )
 
 

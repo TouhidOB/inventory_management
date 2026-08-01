@@ -1,0 +1,110 @@
+{% extends "web/base.html" %}
+{% block title %}Ticket {{ ticket.ticket_no }}{% endblock %}
+{% block heading %}Ticket {{ ticket.ticket_no }}{% endblock %}
+{% block content %}
+{% with cur=current_shop.currency %}
+<div class="row g-3">
+
+  <!-- Left: device + parts + charge -->
+  <div class="col-lg-8 vstack gap-3">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fw-semibold">{{ ticket.device_description }}</div>
+          <div class="small text-secondary">{{ ticket.get_device_type_display }} · {{ ticket.get_issue_type_display }}</div>
+          <div class="small text-secondary mt-1">Customer: {{ ticket.customer.name|default:ticket.customer_name|default:"—" }}
+            {% if ticket.customer.phone or ticket.customer_phone %}· {{ ticket.customer.phone|default:ticket.customer_phone }}{% endif %}</div>
+        </div>
+        <span class="badge text-bg-secondary text-capitalize">{{ ticket.get_status_display }}</span>
+      </div>
+      {% if ticket.complaint %}<div class="small mt-2"><span class="text-secondary">Complaint:</span> {{ ticket.complaint }}</div>{% endif %}
+    </div></div>
+
+    <!-- Parts / products on the bill -->
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-2">Products &amp; parts</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-2">
+          <thead class="thead-2"><tr><th>Product</th><th class="text-end">Qty</th><th class="text-end">Unit price</th><th class="text-end">Amount</th><th></th></tr></thead>
+          <tbody>
+            {% for p in ticket.parts.all %}
+            <tr>
+              <td>{{ p.product.name }}{% if p.from_stock %} <span class="badge text-bg-light">stock</span>{% endif %}</td>
+              <td class="text-end">{{ p.quantity }}</td>
+              <td class="text-end">{{ cur }} {{ p.unit_price|floatformat:2 }}</td>
+              <td class="text-end">{{ cur }} {{ p.line_total|floatformat:2 }}</td>
+              <td class="text-end">
+                {% if is_owner or 'manage_service' in perms_set %}
+                <form method="post" class="d-inline">{% csrf_token %}
+                  <input type="hidden" name="action" value="remove_part">
+                  <input type="hidden" name="part_id" value="{{ p.id }}">
+                  <button data-confirm="Remove {{ p.product.name|escapejs }}?" class="btn btn-link btn-sm text-danger p-0" aria-label="Remove part">✕</button>
+                </form>{% endif %}
+              </td>
+            </tr>
+            {% empty %}<tr><td colspan="5" class="text-center text-secondary py-3">No parts added yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_owner or 'manage_service' in perms_set %}
+      <form method="post" class="row g-2 align-items-end border-top pt-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_part">
+        <div class="col-md-5"><label class="small">Product</label>
+          <select name="product" required class="form-select form-select-sm">
+            <option value="">Choose product…</option>
+            {% for pr in products %}<option value="{{ pr.id }}" data-price="{{ pr.selling_price }}">{{ pr.name }} — {{ cur }} {{ pr.selling_price }}</option>{% endfor %}
+          </select></div>
+        <div class="col-md-2"><label class="small">Qty</label><input name="quantity" type="number" step="0.01" min="0.01" value="1" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label class="small">Unit price <span class="text-secondary">(blank = default)</span></label><input name="unit_price" type="number" step="0.01" min="0" class="form-control form-control-sm"></div>
+        <div class="col-md-2">
+          <label class="small d-block">&nbsp;</label>
+          <div class="form-check"><input class="form-check-input" type="checkbox" name="from_stock" id="fromstock" checked><label class="form-check-label small" for="fromstock">From stock</label></div>
+        </div>
+        <div class="col-12"><button class="btn btn-brand btn-sm">+ Add product</button></div>
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+
+  <!-- Right: billing summary + payment -->
+  <div class="col-lg-4 vstack gap-3">
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-2">Billing</div>
+      {% if is_owner or 'manage_service' in perms_set %}
+      <form method="post" class="input-group input-group-sm mb-3">
+        {% csrf_token %}<input type="hidden" name="action" value="set_charge">
+        <span class="input-group-text">Service charge</span>
+        <input name="service_charge" type="number" step="0.01" min="0" value="{{ ticket.service_charge }}" class="form-control">
+        <button class="btn btn-outline-brand">Save</button>
+      </form>{% endif %}
+      <table class="table table-sm mb-0">
+        <tr><td class="text-secondary">Service charge</td><td class="text-end">{{ cur }} {{ ticket.service_charge|floatformat:2 }}</td></tr>
+        <tr><td class="text-secondary">Parts</td><td class="text-end">{{ cur }} {{ ticket.parts_total|floatformat:2 }}</td></tr>
+        <tr class="fw-bold border-top"><td>Total</td><td class="text-end">{{ cur }} {{ ticket.bill_total|floatformat:2 }}</td></tr>
+        <tr><td class="text-secondary">Paid</td><td class="text-end text-success">{{ cur }} {{ ticket.paid|floatformat:2 }}</td></tr>
+        <tr><td class="text-secondary">Due</td><td class="text-end {% if ticket.due > 0 %}text-danger fw-semibold{% endif %}">{{ cur }} {{ ticket.due|floatformat:2 }}</td></tr>
+      </table>
+    </div></div>
+
+    {% if ticket.due > 0 and is_owner or 'view_service' in perms_set %}
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="fw-semibold mb-2">Collect payment</div>
+      <form method="post" class="vstack gap-2">
+        {% csrf_token %}<input type="hidden" name="action" value="add_payment">
+        <input name="amount" type="number" step="0.01" min="0.01" max="{{ ticket.due }}" placeholder="Amount (due {{ ticket.due }})" required class="form-control form-control-sm">
+        <select name="method" class="form-select form-select-sm">
+          <option value="cash">Cash</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="card">Card</option><option value="bank">Bank</option>
+        </select>
+        <button class="btn btn-brand btn-sm" {% if ticket.due <= 0 %}disabled{% endif %}>Record payment</button>
+      </form>
+    </div></div>
+    {% endif %}
+
+    <a href="{% url 'web:ticket_invoice' ticket.id %}" target="_blank" class="btn btn-light btn-sm">🖨 Print service invoice</a>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

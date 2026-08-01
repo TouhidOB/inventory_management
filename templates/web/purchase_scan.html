@@ -100,10 +100,10 @@
         <span class="badge text-bg-dark" x-text="barcodeCount()+' BARCODES ADDED'"></span>
       </div>
       <div class="card-body">
-        <p class="text-secondary">Paste multiple barcodes or use a scanner for rapid entry. One code per line.</p>
+        <p class="text-secondary">Scan or paste barcodes — each completed code separates automatically. One code per line.</p>
         <div class="row g-3">
           <div class="col-md-8">
-            <textarea x-model="bulk" :disabled="!sel" rows="8" class="form-control font-monospace"
+            <textarea x-model="bulk" @input="normalizeBarcodes()" :disabled="!sel" rows="8" class="form-control font-monospace"
                       placeholder="8806090123456&#10;8806090123457&#10;…"></textarea>
           </div>
           <div class="col-md-4">
@@ -111,6 +111,10 @@
               <div class="fs-3">📠</div>
               <div class="fw-semibold">Continuous Scan Mode</div>
               <div class="small text-secondary mb-2">Focus the cursor in the field to start scanning</div>
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text">Digits/code</span>
+                <input type="number" min="6" max="20" x-model.number="barLen" @change="normalizeBarcodes()" class="form-control" style="max-width:4.5rem">
+              </div>
               <button type="button" @click="bulk=''" :disabled="!sel" class="btn btn-outline-brand btn-sm w-100">Clear List</button>
             </div>
           </div>
@@ -270,7 +274,7 @@
 function purchasePage(){
   return {
     qName:'', qBarcode:'', sel:null, cost:0, selling:0, warranty:0, avgCost:0,
-    bulk:'', queue:[], vendor:'', paid:0, method:'cash', msg:'', previewCount:3, npSupplier:'', newSupEmail:'', supFrom:'',
+    bulk:'', barLen:13, queue:[], vendor:'', paid:0, method:'cash', msg:'', previewCount:3, npSupplier:'', newSupEmail:'', supFrom:'',
     products:[{% for p in products %}{id:{{ p.id }},name:"{{ p.name|escapejs }}",sku:"{{ p.sku|escapejs }}",barcode:"{{ p.barcode|escapejs }}",stock:{{ p.current_stock|default:0 }},cost:{{ p.cost_price|default:0 }},selling:{{ p.selling_price|default:0 }},warranty:{{ p.warranty_months|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
     suppliers:[{% for s in suppliers %}{id:{{ s.id }},name:"{{ s.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
     curr:"{{ current_shop.currency|escapejs }}",
@@ -293,6 +297,24 @@ function purchasePage(){
       const p=this.products.find(x=>x.barcode&&x.barcode.trim()===code) || (this.filtered().length===1?this.filtered()[0]:null);
       if(p){ this.select(p); this.qBarcode=''; this.toast('Selected '+p.name,true); }
       else { this.toast('No product for “'+code+'”',false); }
+    },
+    normalizeBarcodes(){
+      // Auto-separate every barcode. Scanners that emit Enter/Tab/space between
+      // codes already break lines; this also (a) unifies any separator to a
+      // newline and (b) auto-splits a continuous digit run into fixed-length
+      // codes so each completed 12-14 digit barcode lands on its own line
+      // (an "auto-Enter after a complete barcode").
+      const L=Math.min(20,Math.max(6,this.barLen||13));
+      const keepTrailingNL=/\n$/.test(this.bulk);
+      const tokens=this.bulk.replace(/[\s,;|]+/g,'\n').split('\n');
+      const out=[];
+      tokens.forEach(t=>{
+        t=t.trim(); if(!t) return;
+        if(/^\d+$/.test(t) && t.length>L){
+          for(let i=0;i<t.length;i+=L) out.push(t.slice(i,i+L));
+        } else out.push(t);
+      });
+      this.bulk=out.join('\n')+(keepTrailingNL?'\n':'');
     },
     margin(){ const s=Number(this.selling)||0, c=Number(this.cost)||0; return s>0 ? (((s-c)/s)*100).toFixed(1) : '0.0'; },
     profit(){ return (Number(this.selling)||0)-(Number(this.cost)||0); },

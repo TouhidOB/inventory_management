@@ -37,8 +37,9 @@
           {% for t in tickets %}
           <tr class="{% if t.is_overdue %}table-danger{% endif %}">
             <td>
-              <div class="fw-medium">{{ t.ticket_no }}</div>
+              <a href="{% url 'web:ticket_detail' t.id %}" class="fw-medium text-decoration-none">{{ t.ticket_no }}</a>
               {% if t.warranty_id %}<span class="badge text-bg-info">🛡 warranty</span>{% endif %}
+              {% if t.due > 0 %}<div><span class="badge text-bg-warning">Due {{ current_shop.currency }} {{ t.due|floatformat:2 }}</span></div>{% endif %}
             </td>
             <td>{{ t.device_description }}</td>
             <td>{{ t.customer.name|default:t.customer_name|default:"—" }}<div class="small text-secondary">{{ t.customer.phone|default:t.customer_phone }}</div></td>
